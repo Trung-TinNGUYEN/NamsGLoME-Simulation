@@ -1,16 +1,16 @@
 ##########################################################################################################
 
-#       1. Comparison HISTOGRAMS of selected GLoME models between well-specified (WS)
-#           and misspecified (MS) cases using jump and slope criteria over 100 trials.
-#       2. BOX-PLOTS of the tensorized Kullback-Leibler divergence according to the number
-#             of mixture components using the jump criterion over 100 trials.
+#   Error decay of Tensorized Kullback-Leibler divergence between the true and selected
+#  densities based on the jump criterion, represented in a log-log scale, using 30 trials.
+#  A free least-square regression with standard error and a regression with slope −1 were
+#   added to stress the two different behavior for each graph.
 
 ##########################################################################################################
 
 # RUNNING TIME on Dell Lattitude 5490 (Intel(R) Core(TM) i5-8250U CPU @ 1.6GHz, 8GB RAM).
-# We run our experiments on 2000 and 10000 data points over 100 trials,
+# We run our experiments on 2000 and 10000 data points over 30 trials,
 #  using 30 samples for Monte Carlo method to approximate tensorized Kullback-Leibler divergence:
-# Total: 24 hours.
+# Total: 20 hours.
 
 ##########################################################################################################
 
@@ -58,10 +58,10 @@ library(matrixcalc)
 ##########################################################################################################
 
 # Number of trials for numerical experiments.
-num_trials <- 100
+num_trials <- 30
 
-# Sample sizes used for this experiment.
-num_obs <- c(2000,10000)
+# Sample sizes used for this experiment: 1000  1260  1587  2000  2520  3175  4000  5040  6350  8000 10079.
+num_obs <- round(1000*2.^((0:10)/3))
 
 # Collection of model based on the numer of components K of GLLiM.
 # K = 1,...,Kmax
@@ -404,275 +404,6 @@ if (save_data == TRUE){
   saveRDS(model_Djump_MS, file = "model_Djump_MS.rds")
   saveRDS(model_DDSE_MS, file = "model_DDSE_MS.rds")
 }
-
-##########################################################################################################
-#             Plot histograms of selected models for WS and MS cases
-#                 using jump andslope criteria over 100 trials.
-##########################################################################################################
-
-  pdf("Histograms_Selected_K_100_Trials_Djump_DDSE_WS_MS.pdf",  width = 8.27, height = 11.69)
-  op <- par(mfrow = c(4, 2))
-  hist(as.numeric(model_Djump_WS[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(a) 2000 WS data points using jump criterion")
-
-  hist(as.numeric(model_Djump_WS[,2]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(b) 10000 WS data points using jump criterion")
-
-  hist(as.numeric(model_Djump_MS[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(c) 2000 MS data points using jump criterion")
-
-  hist(as.numeric(model_Djump_MS[,2]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(d) 10000 MS data points using jump criterion")
-
-  hist(as.numeric(model_DDSE_WS[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(e) 2000 WS data points using slope criterion")
-
-  hist(as.numeric(model_DDSE_WS[,2]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(f) 10000 WS data points using slope criterion")
-
-  hist(as.numeric(model_DDSE_MS[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(g) 2000 MS data points using slope criterion")
-
-  hist(as.numeric(model_DDSE_MS[,2]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(h) 10000 MS data points using slope criterion")
-  op <- par(mfrow = c(1, 1))
-  dev.off()
-
-##########################################################################################################
-# Box-plot of the tensorized (Jensen)-Kullback-Leibler divergence according to the number of
-#           mixture components using the jump criterion over 100 trials.
-##########################################################################################################
-
-###############################
-# Kullback-Leibler divergence.
-###############################
-pdf("Boxplot_KL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
-op <- par(mfrow = c(2, 2))
-
-####
-# Example WS with 2000 data points.
-####
-
-# Create a data frame that combines all interested boxplots for WS case using jump criterion
-KL_WS_df_2000 <- data.frame(t(KL_WS[1,,]), KL_model_hat_Djump_WS[,1])
-names(KL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_WS_df_2000, border = "blue", ylim = c(min(KL_WS[1,-1,]),max(KL_WS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_WS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(KL_WS[1,-1,])+max(KL_WS[1,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(a) Example WS with 2000 data points")
-
-####
-# Example WS with 10000 data points.
-####
-KL_WS_df_2000 <- data.frame(t(KL_WS[2,,]), KL_model_hat_Djump_WS[,2])
-names(KL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_WS_df_2000, border = "blue", ylim = c(min(KL_WS[2,-1,]),max(KL_WS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_WS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(KL_WS[2,-1,])+max(KL_WS[2,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(b) Example WS with 10000 data points")
-
-####
-# Example MS with 2000 data points.
-####
-KL_MS_df_2000 <- data.frame(t(KL_MS[1,,]), KL_model_hat_Djump_MS[,1])
-names(KL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_MS_df_2000, border = "blue", ylim = c(min(KL_MS[1,-1,]),max(KL_MS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_MS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(KL_MS[1,-1,])+max(KL_MS[1,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(c) Example MS with 2000 data points")
-
-####
-# Example MS with 10000 data points.
-####
-KL_MS_df_2000 <- data.frame(t(KL_MS[2,,]), KL_model_hat_Djump_MS[,2])
-names(KL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_MS_df_2000, border = "blue", ylim = c(min(KL_MS[2,-1,]),max(KL_MS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_MS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(KL_MS[2,-1,])+max(KL_MS[2,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(d) Example MS with 10000 data points")
-
-op <- par(mfrow = c(1, 1))
-dev.off()
-
-#####################################
-# Jensen-Kullback-Leibler divergence.
-#####################################
-pdf("Boxplot_JKL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
-op <- par(mfrow = c(2, 2))
-
-####
-# Example WS with 2000 data points.
-####
-
-# Create a data frame that combines all interested boxplots for WS case using jump criterion
-JKL_WS_df_2000 <- data.frame(t(JKL_WS[1,,]), JKL_model_hat_Djump_WS[,1])
-names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[1,-1,]),max(JKL_WS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_WS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(JKL_WS[1,-1,])+max(JKL_WS[1,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(a) Example WS with 2000 data points")
-
-####
-# Example WS with 10000 data points.
-####
-JKL_WS_df_2000 <- data.frame(t(JKL_WS[2,,]), JKL_model_hat_Djump_WS[,2])
-names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[2,-1,]),max(JKL_WS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_WS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(JKL_WS[2,-1,])+max(JKL_WS[2,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(b) Example WS with 10000 data points")
-
-####
-# Example MS with 2000 data points.
-####
-JKL_MS_df_2000 <- data.frame(t(JKL_MS[1,,]), JKL_model_hat_Djump_MS[,1])
-names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[1,-1,]),max(JKL_MS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_MS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(JKL_MS[1,-1,])+max(JKL_MS[1,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(c) Example MS with 2000 data points")
-
-####
-# Example MS with 10000 data points.
-####
-JKL_MS_df_2000 <- data.frame(t(JKL_MS[2,,]), JKL_model_hat_Djump_MS[,2])
-names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[2,-1,]),max(JKL_MS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_MS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(JKL_MS[2,-1,])+max(JKL_MS[2,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(d) Example MS with 10000 data points")
-
-op <- par(mfrow = c(1, 1))
-dev.off()
-
 
 ##########################################################################################################
 # Plot error decay of Tensorized Kullback-Leibler divergence between the true and selected
