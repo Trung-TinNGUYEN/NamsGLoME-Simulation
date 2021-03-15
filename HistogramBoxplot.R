@@ -560,122 +560,122 @@ dev.off()
 
 #####################################
 # Jensen-Kullback-Leibler divergence.
+# Default value: show_JKL <- FALSE
 #####################################
-pdf("Boxplot_JKL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
-op <- par(mfrow = c(2, 2))
+show_JKL <- FALSE
 
-####
-# Example WS with 2000 data points.
-####
-
-# Create a data frame that combines all interested boxplots for WS case using jump criterion
-JKL_WS_df_2000 <- data.frame(t(JKL_WS[1,,]), JKL_model_hat_Djump_WS[,1])
-names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[1,-1,]),max(JKL_WS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_WS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(JKL_WS[1,-1,])+max(JKL_WS[1,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(a) Example WS with 2000 data points")
-
-####
-# Example WS with 10000 data points.
-####
-JKL_WS_df_2000 <- data.frame(t(JKL_WS[2,,]), JKL_model_hat_Djump_WS[,2])
-names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[2,-1,]),max(JKL_WS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_WS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(JKL_WS[2,-1,])+max(JKL_WS[2,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(b) Example WS with 10000 data points")
-
-####
-# Example MS with 2000 data points.
-####
-JKL_MS_df_2000 <- data.frame(t(JKL_MS[1,,]), JKL_model_hat_Djump_MS[,1])
-names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[1,-1,]),max(JKL_MS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_MS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(JKL_MS[1,-1,])+max(JKL_MS[1,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(c) Example MS with 2000 data points")
-
-####
-# Example MS with 10000 data points.
-####
-JKL_MS_df_2000 <- data.frame(t(JKL_MS[2,,]), JKL_model_hat_Djump_MS[,2])
-names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[2,-1,]),max(JKL_MS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[JKL]
-
-lines(1:Kmax, colMeans(t(JKL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-
-lines(1:21, mean(JKL_model_hat_Djump_MS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(JKL_MS[2,-1,])+max(JKL_MS[2,-1,])),
-       legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(d) Example MS with 10000 data points")
-
-op <- par(mfrow = c(1, 1))
-dev.off()
-
-
-##########################################################################################################
-# Plot error decay of Tensorized Kullback-Leibler divergence between the true and selected
-#  densities based on the jump criterion, represented in a log-log scale, using 30 trials.
-##########################################################################################################
+if (show_JKL == TRUE){
+  pdf("Boxplot_JKL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
+  op <- par(mfrow = c(2, 2))
+  
+  ####
+  # Example WS with 2000 data points.
+  ####
+  
+  # Create a data frame that combines all interested boxplots for WS case using jump criterion
+  JKL_WS_df_2000 <- data.frame(t(JKL_WS[1,,]), JKL_model_hat_Djump_WS[,1])
+  names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+  
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[1,-1,]),max(JKL_WS[1,-1,])))
+  
+  # Add some lines
+  lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
+        lty = "dashed", col = "black") # asymptotic E[JKL]
+  
+  lines(1:Kmax, colMeans(t(JKL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
+  
+  lines(1:21, mean(JKL_model_hat_Djump_WS[,1])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[JKL]
+  
+  # Make a legend for lines
+  legend(8, 0.98*(min(JKL_WS[1,-1,])+max(JKL_WS[1,-1,])),
+         legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(a) Example WS with 2000 data points")
+  
+  ####
+  # Example WS with 10000 data points.
+  ####
+  JKL_WS_df_2000 <- data.frame(t(JKL_WS[2,,]), JKL_model_hat_Djump_WS[,2])
+  names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+  
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[2,-1,]),max(JKL_WS[2,-1,])))
+  
+  # Add some lines
+  lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
+        lty = "dashed", col = "black") # asymptotic E[JKL]
+  
+  lines(1:Kmax, colMeans(t(JKL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
+  
+  lines(1:21, mean(JKL_model_hat_Djump_WS[,2])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[JKL]
+  
+  # Make a legend for lines
+  legend(8, 0.96*(min(JKL_WS[2,-1,])+max(JKL_WS[2,-1,])),
+         legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(b) Example WS with 10000 data points")
+  
+  ####
+  # Example MS with 2000 data points.
+  ####
+  JKL_MS_df_2000 <- data.frame(t(JKL_MS[1,,]), JKL_model_hat_Djump_MS[,1])
+  names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+  
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[1,-1,]),max(JKL_MS[1,-1,])))
+  
+  # Add some lines
+  lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
+        lty = "dashed", col = "black") # asymptotic E[JKL]
+  
+  lines(1:Kmax, colMeans(t(JKL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
+  
+  lines(1:21, mean(JKL_model_hat_Djump_MS[,1])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[JKL]
+  
+  # Make a legend for lines
+  legend(8, 0.98*(min(JKL_MS[1,-1,])+max(JKL_MS[1,-1,])),
+         legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(c) Example MS with 2000 data points")
+  
+  ####
+  # Example MS with 10000 data points.
+  ####
+  JKL_MS_df_2000 <- data.frame(t(JKL_MS[2,,]), JKL_model_hat_Djump_MS[,2])
+  names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+  
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[2,-1,]),max(JKL_MS[2,-1,])))
+  
+  # Add some lines
+  lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
+        lty = "dashed", col = "black") # asymptotic E[JKL]
+  
+  lines(1:Kmax, colMeans(t(JKL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
+  
+  lines(1:21, mean(JKL_model_hat_Djump_MS[,2])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[JKL]
+  
+  # Make a legend for lines
+  legend(8, 0.96*(min(JKL_MS[2,-1,])+max(JKL_MS[2,-1,])),
+         legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(d) Example MS with 10000 data points")
+  
+  op <- par(mfrow = c(1, 1))
+  dev.off()
+  
+}
 
