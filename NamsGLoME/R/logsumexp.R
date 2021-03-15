@@ -1,3 +1,4 @@
+#' @export
 logsumexp = function(x,dimension=c(1,2)){
 # % Compute log(sum(exp(x),dim)) while avoiding numerical underflow.
 # %   By default dim = 1 (row).
