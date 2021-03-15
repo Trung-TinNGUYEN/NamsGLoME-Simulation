@@ -1,12 +1,35 @@
 Package: NamsGLoME
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Non-asymptotic Model Selection in Mixture of Experts Models.
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: c(person("TrungTin", "Nguyen", role = c("aut","cre"),
+    email = "trung-tin.nguyen@unicaen.fr"),
+    person("Hien Duy", "Nguyen", role = c("aut"),
+    email = "h.nguyen5@latrobe.edu.au"),
+    person("Faicel", "Chamroukhi", role = c("aut"),
+    comment = c(ORCID = "0000-0002-5894-3103"),
+    email = "faicel.chamroukhi@unicaen.fr"),
+    person("Florence", "Forbes", role = c("aut"),
+    email = "florence.forbes@inria.fr"))
+Description: Non-asymptotic Penalization Criteria for Model Selection in Mixture of Experts Models.
+License: GPL (>= 3)
+Imports:
+    MASS,
+    stats,
+    graphics
+Collate:
+    utils.R
+    logsumexp.R
+    MAP.R
+    posterior_mvGMM.R
+    mvGMM_pdf.R
+    mvgaussian_pdf.R
+    sample_mvGMM.R
+    sample_GLLiM.R
+    sample_GLoME_parabola.R
+    loggausspdf.R
+    gllim_inverse_dens.R
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1

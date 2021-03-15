@@ -1,7 +1,10 @@
 [Dolphin]
-Timestamp=2021,3,14,18,47,53
+SortOrder=1
+SortRole=type
+Timestamp=2021,3,15,20,17,10
 Version=4
 ViewMode=1
+VisibleRoles=Details_text,Details_size,Details_modificationtime,Details_type,CustomizedDetails
 
 [Settings]
 HiddenFilesShown=true

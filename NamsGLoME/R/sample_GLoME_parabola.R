@@ -1,5 +1,5 @@
 #' @export
-sample_MoGATEParabola = function(alpha, mu, R, beta0, beta, beta2, sigma, n, ny) {
+sample_GLoME_parabola = function(alpha, mu, R, beta0, beta, beta2, sigma, n, ny) {
   # Output: Draws an n-sample from a mixture of gaussian-gated experts model
   # with parabolic mean experts.
     # X (nxp), y (nx1): sample data set (X_i,y_i)_{i=1,...n}
