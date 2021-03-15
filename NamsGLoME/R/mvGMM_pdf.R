@@ -25,7 +25,7 @@ mvGMM_pdf <- function(X, gmm) {
     sigmak <- gmm$covariances[, , k]
 
     log_fik <- mvgaussian_pdf(X, muk, sigmak)$log_fxi
-    log_pik_fik[, k] <- ones(n, 1) * log(pik) + log_fik
+    log_pik_fik[, k] <- ones(n, 1) * log(pik) + log_fik # nx1
   }
 
   # pik_fik = max(pik_fik,eps);

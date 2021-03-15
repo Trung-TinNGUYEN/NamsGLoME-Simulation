@@ -17,9 +17,11 @@ mvgaussian_pdf = function(X, mu, sigma, covtype = c("full", "diagonal")) {
 
   covtype <- match.arg(covtype)
 
+  sigma <- as.matrix(sigma) # Make sure sigma(1x1) is still a matrix for diag
+
   if (covtype == "diagonal") {
     diagelements <- diag(sigma) + .Machine$double.eps
-    invSigma <- diag(1 / diagelements)
+    invSigma <- diag(as.matrix(1 / diagelements))
     detSigma <- prod(diagelements)
   } else if (covtype == "full") {
     detSigma <- det(sigma)

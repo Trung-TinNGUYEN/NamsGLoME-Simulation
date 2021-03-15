@@ -33,7 +33,7 @@ learn_MoGATE = function(X, y, K, nb_EM_runs = 1, verbose = FALSE) {
     sigma2 <- initialization$sigma2
     nu2 <- matrix(data = 0, nrow = K, ncol = p)
     for (k in 1:K) {
-      nu2[k,] <- diag(R[, , k])
+      nu2[k,] <- diag(as.matrix(R[, , k]))
     }
 
     iter <- 0
@@ -81,8 +81,8 @@ learn_MoGATE = function(X, y, K, nb_EM_runs = 1, verbose = FALSE) {
 
         # The Gaussian cov matrices
         # R[, , k] <- (t(z) %*% z) / sum(tauk)
-        R[, , k] <- diag(apply(X = z^2, MARGIN = 2, FUN = sum) / sum(tauk)) + .Machine$double.eps
-        nu2[k, ] <- diag(R[, , k])
+        R[, , k] <- diag(as.matrix(apply(X = z^2, MARGIN = 2, FUN = sum) / sum(tauk))) + .Machine$double.eps
+        nu2[k, ] <- diag(as.matrix(R[, , k]))
 
         # Expert Network
         Xk <- X * (sqrt(tauk %*% ones(1, p)))
@@ -157,6 +157,9 @@ learn_MoGATE = function(X, y, K, nb_EM_runs = 1, verbose = FALSE) {
     klas <- outMAP$klas
     Zik <- outMAP$Z
     solution$stats$klas <- klas
+
+    # Somtimes there exists error like "Error in (klas %*% ones(1, K)) == (ones(n, 1) %*% 1:K) : tableaux de tailles inadéquates"
+    # for n = 200, p = 1.
 
     # Statistics (means, variances) To Be UPDATED
     #         # E[yi|zi=k]
