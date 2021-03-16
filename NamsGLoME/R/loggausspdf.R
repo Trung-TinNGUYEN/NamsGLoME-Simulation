@@ -5,7 +5,7 @@ loggausspdf = function(X, mu, Sigma){
 	{X=X-mu;}#sweep(X,2,mu,"-")}
 	else {X=sweep(X,1,mu,"-")}
 	#X = #scale(X,center=mu,scale=FALSE) # d x n  ### X ou t(X)
-	p = is.positive.definite(Sigma,.Machine$double.eps)
+	p = matrixcalc::is.positive.definite(Sigma,.Machine$double.eps)
 	if (! p) {
 		print("SNPD !");
 		y= rep(-Inf,n)

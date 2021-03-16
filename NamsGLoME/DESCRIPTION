@@ -16,7 +16,10 @@ License: GPL (>= 3)
 Imports:
     MASS,
     stats,
-    graphics
+    graphics,
+    capushe,
+    xLLiM,
+    matrixcalc
 Collate:
     utils.R
     logsumexp.R
@@ -29,6 +32,8 @@ Collate:
     sample_GLoME_parabola.R
     loggausspdf.R
     gllim_inverse_dens.R
+    model_true.R
+    simulation.R
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

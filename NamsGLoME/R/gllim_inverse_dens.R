@@ -3,7 +3,7 @@ gllim_inverse_dens = function(y,theta,x,verb=0){
 # %%%%%%%%%%%%%%%%% Inverse Mapping from Gllim Parameters %%%%%%%%%%%%%%%%%%%
 # %%%% Author: Antoine Deleforge (July 2012) - antoine.deleforge@inria.fr %%%
 # %% Converted to R: Emeline Perthame (2016) - perthame.emeline@gmail.com %%%
-# %% Update with more output (29-01-2021) - tinnguyen0495@gmail.com       %%
+# %% Extented: TrungTin Nguyen (14-03-2021) - tinnguyen0495@gmail.com     %%%
 
 # % Description:
 # 1. Map N observations y using the inverse conditional

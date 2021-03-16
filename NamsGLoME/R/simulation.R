@@ -1,77 +1,112 @@
+#' @export
+simulation = function(num_trials, num_obs, GLoME_true, Kmax = 20, ny = 30, rho = 1/2, save_data = FALSE,
+                      plot_histogram = FALSE, plot_boxplot_KL = FALSE, plot_boxplot_JKL = FALSE,
+                      plot_error_decay_KL = TRUE, plot_error_decay_JKL = FALSE){
+  # %%%%%%%%%%%%%%%%% Non-asymptotic Model Selection in Mixture of Experts Models %%%%%%%%%%%%%%%%%%%%%%
+  # %% Author: TrungTin Nguyen (14-03-2021) - tinnguyen0495@gmail.com
+
+  # % Description:
+  # For each trial (t), each sample (n), each GLoME model (K):
+  # 1. We first initalize the whole data sets in two case: well-specified (WS) and misspecified (MS),
+  #   which are used for the penalized maximum likelihood estimators (PMLE) and Monte Carlo method.
+  # 2. Then, we make use of GLLiM model to estimate the parameters of inverse regression.
+  # 3. Using gllim_inverse_dens() leads to the parameters of forward regression.
+  # 4. Finally, we utilize capushe package to calibrate penalties in the context of model
+  #   selection via penalization based on the slope heuristics.
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  # %%%% Input %%%%
+  # % - num_trials (1x1): Number of trials for numerical experiments.
+  # % - num_obs (1xlength(num_obs)): Sample sizes used for this experiment.
+  # % - Kmax (1x1): Collection of model based on the numer of components K of GLoME.
+  # % - ny (1x1): Number data points for approximating KL using Monte Carlo method.
+  # % - rho in (0,1) (1x1): Hyperparameter rho for (Jensen)-Kullback-Leibler divergence.
+  # % - GLoME_true list(): structure contains true parameters for simulation. By default,
+  # %   it comprises the following components:
+  # %   - GLoME_true$K_true (1x1): True model (number of mixture components).
+  # %   - GLoME_true$D (1x1): Dimensional of covariates X(Dx1).
+  # %   - GLoME_true$L (1x1): Dimensional of response variables Y(Lx1).
+  # %   Gaussian gating functions:
+  # %     - GLoME_true$pi_true (1xK_true): Prior on mixture.
+  # %     - GLoME_true$c_true (K_truexD): True means.
+  # %     - GLoME_true$Gamma_true (DxDxK_true): True covariance matrices.
+  # %   Means of Gaussian Experts: WS case with First degree polynomials (linear polynomials).
+  # %     - GLoME_true$b_true_WS (LxK_true): True intercept vectors.
+  # %     - GLoME_true$A_true_WS (LxDxK_true): True slope coefficient matrices.
+  # %   Means of Gaussian Experts: MS case with second degree polynomials
+  # %                                   (quadratic polynomials, parabola).
+  # %     - GLoME_true$beta0_MS (LxK_true): True coefficient vectors of the first term.
+  # %     - GLoME_true$beta_MS (LxDxK_true): True coefficient matrices of the second term.
+  # %     - GLoME_true$beta2_MS (LxDxK_true): True coefficient matrices of the third term.
+  # %   Covariance matrices of Gaussian Experts:
+  # %     - GLoME_true$sigma_true (LxL): True standard deviations of Gaussian Experts.
+  # % - save_data == TRUE: Save the outputs of this numerical experiments
+  # %    to local machine on Working directory.
+  # % - plot_histogram == TRUE: Comparison histogram of selected GLoME models between well-specified (WS)
+  # %   and misspecified (MS) cases using jump and slope criteria over num_trials.
+  # % - plot_boxplot_KL == TRUE, plot_boxplot_JKL == TRUE: Box-plots of the tensorized
+  # %   (Jensen)-Kullback-Leibler divergence according to the number of mixture components
+  # %   using the jump criterion over num_trials.
+  # %%%% Output %%%%
+  # % WS case:
+  # %   - model_Djump_WS, model_DDSE_WS (num_trials x num_obs): Matrix contains the selected models
+  # %   based on djump and DDSE criteria from capushe package for different sample size over
+  # %   different trials on well-specified (WS) case.
+  # %   - data_capushe_WS, data_capushe_MS list(): List of data used for capushe package.
+  # %   - complexity_WS, contrast_WS (num_obs x Kmax): Collection of model complexity values and
+  # %   minimum contrast value for each model based on the numer of mixture components K of GLoME:
+  # %   K = 1,...,Kmax.
+  # %   - KL_WS (1x num_obs x num_trials): KL over all trials, models and num_obs samples.
+  # %   - KL_model_hat_Djump_WS, KL_model_hat_DDSE_WS (num_obs x num_trials): KL for a selected model.
+  # %   - JKL_WS (1x num_obs x num_trials): KL over all trials, models and num_obs samples.
+  # %   - JKL_model_hat_Djump_WS, JKL_model_hat_DDSE_WS (num_obs x num_trials): JKL for a selected model.
+  # % MS case:
+  # %   - model_Djump_MS, model_DDSE_MS (num_trials x num_obs): Matrix contains the selected models
+  # %   based on djump and DDSE criteria from capushe package for different sample size over
+  # %   different trials on well-specified (MS) case.
+  # %   - data_capushe_MS, data_capushe_MS list(): List of data used for capushe package.
+  # %   - complexity_MS, contrast_MS (num_obs x Kmax): Collection of model complexity values and
+  # %   minimum contrast value for each model based on the numer of mixture components K of GLoME:
+  # %   K = 1,...,Kmax.
+  # %   - KL_MS (1x num_obs x num_trials): KL over all trials, models and num_obs samples.
+  # %   - KL_model_hat_Djump_MS, KL_model_hat_DDSE_MS (num_obs x num_trials): KL for a selected model.
+  # %   - JKL_MS (1x num_obs x num_trials): KL over all trials, models and num_obs samples.
+  # %   - JKL_model_hat_Djump_MS, JKL_model_hat_DDSE_MS (num_obs x num_trials): JKL for a selected model.
+  # % - running_time (s/mins/hours): total running time for the function NamsGLoME_simulation().
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 ##########################################################################################################
-
-#       1. Comparison HISTOGRAMS of selected GLoME models between well-specified (WS)
-#           and misspecified (MS) cases using jump and slope criteria over 100 trials.
-#       2. BOX-PLOTS of the tensorized Kullback-Leibler divergence according to the number
-#             of mixture components using the jump criterion over 100 trials.
-
+# Create the true parameters for simulated data sets based on the GLoME_true structure.
 ##########################################################################################################
+# Import some packages.
+import::from(xLLiM, gllim)
+import::from(capushe, capushe)
 
-# RUNNING TIME on Dell Lattitude 5490 (Intel(R) Core(TM) i5-8250U CPU @ 1.6GHz, 8GB RAM).
-# We run our experiments on 2000 and 10000 data points over 100 trials,
-#  using 30 samples for Monte Carlo method to approximate tensorized Kullback-Leibler divergence:
-# Total: 24 hours.
+K_true <- GLoME_true$K_true # (1x1)
+D <- GLoME_true$D # (1x1)
+L <- GLoME_true$L # (1x1)
 
-##########################################################################################################
+if ((K_true != 2) || (L != 1) || (D != 1)){
+  print('Warning: The default parameters: K_true = 2, D = 1, L = 1.
+        Please modify the following parts so that it is consistent with your customized parameters!')
+  break
+}
 
-# Removes all objects from the current workspace (R memory).
-#rm(list = ls())
+# %   Gaussian gating functions:
+pi_true <- GLoME_true$pi_true # (1x1)
+c_true <- GLoME_true$c_true # (K_truexD)
+Gamma_true <- GLoME_true$Gamma_true # (DxDxK_true)
 
-##########################################################################################################
-#                                         Load packages
-##########################################################################################################
+# Means of Gaussian Experts: WS case with First degree polynomials (linear polynomials).
+b_true_WS <- GLoME_true$b_true_WS # (LxK_true)
+A_true_WS <- GLoME_true$A_true_WS # (LxDxK_true)
 
-# Install the NamsGLoME package for local machine.
-# install.packages("devtools")
-# devtools::document("NamsGLoME")
-devtools::install("NamsGLoME")
-library(NamsGLoME)
+# Means of Gaussian Experts: MS case with second degree polynomials (quadratic polynomials, parabola).
+beta0_MS <- GLoME_true$beta0_MS # (LxK_true)
+beta_MS <- GLoME_true$beta_MS # (LxDxK_true)
+beta2_MS <- GLoME_true$beta2_MS # (LxDxK_true)
 
-# Load CRAN Packages used in this paper.
-
-# CAlibrating Penalities Using Slope HEuristics (CAPUSHE):
-# The capushe function proposes two algorithms based on the slope heuristics
-# to calibrate penalties in the context of model selection via penalization.
-#install.packages("capushe")
-library(capushe)
-
-# High Dimensional Locally-Linear Mapping:
-# Provides a tool for non linear mapping (non linear regression)
-# using a mixture of regression model and an inverse regression strategy.
-#install.packages("xLLiM")
-library(xLLiM)
-
-# Create Elegant Data Visualisations Using the Grammar of Graphics:
-# A system for 'declaratively' creating graphics, based on "The Grammar of Graphics".
-# You provide the data, tell 'ggplot2' how to map variables to aesthetics,
-# what graphical primitives to use, and it takes care of the details.
-#install.packages("ggplot2")
-library(ggplot2)
-
-# A collection of functions to support matrix calculations
-# for probability, econometric and numerical analysis.
-#install.packages("matrixcalc")
-library(matrixcalc)
-
-##########################################################################################################
-#                           Setting parameters for experiments
-##########################################################################################################
-
-# Number of trials for numerical experiments.
-num_trials <- 100
-
-# Sample sizes used for this experiment.
-num_obs <- c(2000,10000)
-
-# Collection of model based on the numer of components K of GLLiM.
-# K = 1,...,Kmax
-Kmax <- 20
-
-# Number data points for approximating KL using Monte Carlo method.
-ny <- 30
-
-# Hyperparameter rho for (Jensen)-Kullback-Leibler divergence.
-rho = 1/2
+# Covariance matrices of Gaussian Experts:
+sigma_true <- GLoME_true$sigma_true # (LxL)
 
 ##########################################################################################################
 #                               Saving data of experiments
@@ -124,55 +159,6 @@ JKL_MS <- Inf*array(1, dim = c(length(num_obs), Kmax, num_trials))
 JKL_model_hat_Djump_MS <- JKL_model_hat_DDSE_MS <- matrix(0, num_trials, length(num_obs))
 
 ##########################################################################################################
-#     Choosing the true parameters for simulated data sets where the true model
-#                         (mixture of components K) equals 2.
-##########################################################################################################
-
-D <- 1 # dimension of data
-pi_True <- c(1/2, 1/2)
-
-####
-# Gating network parameters:
-# True means of gates
-c_true <- matrix(data = NA, nrow = 2, ncol = D)
-c_true[1, ] <- c(0.2)
-c_true[2, ] <- c(0.8)
-
-# True covariance matrices of Gates
-Gamma_true <- array(NA, dim = c(D, D, 2))
-Gamma_true[, , 1] <- 0.1*diag(nrow = D)
-Gamma_true[, , 2] <- 0.15*diag(nrow = D)
-
-####
-# Experts network parameters:
-# Well-Specified (WS) case. This model is identical
-# with supervised Gaussian Locally Linear Mapping (GLLiM).
-
-# Means of Gaussian Experts
-b_true_WS <- c(2, 0)
-A_true_WS <- matrix(data = NA, nrow = D, ncol = 2)
-
-A_true_WS[, 1] <- c(-5)
-A_true_WS[, 2] <- c(0.1)
-
-# Misspecified (MS) case where we choose parabolic means for Gaussian Experts:
-
-# Means of Gaussian Experts
-beta0_MS <- c(1, 0)
-beta_MS <- matrix(data = NA, nrow = D, ncol = 2)
-
-beta_MS[, 1] <- c(-6)
-beta_MS[, 2] <- c(0)
-
-beta2_MS <- matrix(data = NA, nrow = D, ncol = 2)
-
-beta2_MS[, 1] <- c(1)
-beta2_MS[, 2] <- c(-0.4)
-
-# Standard deviations of Gaussian Experts for both cases WS and MS.
-sigma_true <- matrix(data = 0.3, nrow = 1, ncol = 2)
-
-##########################################################################################################
 # Generate simulated data sets (WS and MS) and estimate the parameters of GLoME models
 ##########################################################################################################
 
@@ -192,11 +178,11 @@ for (t in 1:num_trials) {
     # Initalize the whole data sets used for penalized maximum likelihood estimators (PMLE)
     # and Monte Carlo method:
     # WS case
-    sample_data_WS <- NamsGLoME::sample_GLLiM(pi_True, c_true, Gamma_true, b_true_WS,
+    sample_data_WS <- NamsGLoME::sample_GLLiM(pi_true, c_true, Gamma_true, b_true_WS,
                                               A_true_WS, sigma_true, num_obs[n] , ny)
 
     # MS case
-    sample_data_MS <- NamsGLoME::sample_GLoME_parabola(pi_True, c_true, Gamma_true, beta0_MS,
+    sample_data_MS <- NamsGLoME::sample_GLoME_parabola(pi_true, c_true, Gamma_true, beta0_MS,
                                                        beta_MS, beta2_MS, sigma_true, num_obs[n], ny)
 
     for (K in 1:Kmax) {
@@ -243,7 +229,7 @@ for (t in 1:num_trials) {
         CLL_WS_vec <- gllim_inverse_dens(t(sample_data_WS$Xny),estimate_GLoME_WS,t(sample_data_WS$yny))$CLL_vec
 
         JKL_WS[n,K,t] <- 1/(num_obs[n]*ny*rho)*sum(log(sample_data_WS$gllim_pdf_vec/
-                                                        ((1-rho)*sample_data_WS$gllim_pdf_vec+rho*CLL_WS_vec)))
+                                                         ((1-rho)*sample_data_WS$gllim_pdf_vec+rho*CLL_WS_vec)))
 
         # MS case:
         # Using n data points for estimators.
@@ -277,9 +263,9 @@ for (t in 1:num_trials) {
         CLL_MS_vec <- gllim_inverse_dens(t(sample_data_MS$Xny),estimate_GLoME_MS,t(sample_data_MS$yny))$CLL_vec
 
         JKL_MS[n,K,t] <- 1/(num_obs[n]*ny*rho)*sum(log(sample_data_MS$moe2_pdf_vec/
-                                                        ((1-rho)*sample_data_MS$moe2_pdf_vec+rho*CLL_MS_vec)))
-      ####
-      # K = 1: Using lm function from stats package in R to estimate MLE for linear regression:
+                                                         ((1-rho)*sample_data_MS$moe2_pdf_vec+rho*CLL_MS_vec)))
+        ####
+        # K = 1: Using lm function from stats package in R to estimate MLE for linear regression:
       } else {
         ####
         # WS case:
@@ -364,10 +350,6 @@ for (t in 1:num_trials) {
   }
 }
 
-end_time <- Sys.time()
-running_time <- end_time - start_time
-print(running_time)
-
 ##########################################################################################################
 # Save simulated WS and MS data sets and its related terms to files in local machine.
 ##########################################################################################################
@@ -375,8 +357,6 @@ print(running_time)
 # If save_data = TRUE, the simulated WS and MS data sets and its related terms
 # is exported to files in local machine, otherwise, skip this step.
 # Default value: save_data <-  FALSE
-
-save_data <-  FALSE
 
 if (save_data == TRUE){
 
@@ -407,9 +387,10 @@ if (save_data == TRUE){
 
 ##########################################################################################################
 #             Plot histograms of selected models for WS and MS cases
-#                 using jump andslope criteria over 100 trials.
+#                 using jump andslope criteria over num_trials.
 ##########################################################################################################
 
+if (plot_histogram == TRUE){
   pdf("Histograms_Selected_K_100_Trials_Djump_DDSE_WS_MS.pdf",  width = 8.27, height = 11.69)
   op <- par(mfrow = c(4, 2))
   hist(as.numeric(model_Djump_WS[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
@@ -437,6 +418,7 @@ if (save_data == TRUE){
        ylab = "Empirical Probability", freq = 0,main = "(h) 10000 MS data points using slope criterion")
   op <- par(mfrow = c(1, 1))
   dev.off()
+}
 
 ##########################################################################################################
 # Box-plot of the tensorized (Jensen)-Kullback-Leibler divergence according to the number of
@@ -446,148 +428,150 @@ if (save_data == TRUE){
 ###############################
 # Kullback-Leibler divergence.
 ###############################
-pdf("Boxplot_KL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
-op <- par(mfrow = c(2, 2))
 
-####
-# Example WS with 2000 data points.
-####
-
-# Create a data frame that combines all interested boxplots for WS case using jump criterion
-KL_WS_df_2000 <- data.frame(t(KL_WS[1,,]), KL_model_hat_Djump_WS[,1])
-names(KL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_WS_df_2000, border = "blue", ylim = c(min(KL_WS[1,-1,]),max(KL_WS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_WS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(KL_WS[1,-1,])+max(KL_WS[1,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(a) Example WS with 2000 data points")
-
-####
-# Example WS with 10000 data points.
-####
-KL_WS_df_2000 <- data.frame(t(KL_WS[2,,]), KL_model_hat_Djump_WS[,2])
-names(KL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_WS_df_2000, border = "blue", ylim = c(min(KL_WS[2,-1,]),max(KL_WS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_WS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(KL_WS[2,-1,])+max(KL_WS[2,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(b) Example WS with 10000 data points")
-
-####
-# Example MS with 2000 data points.
-####
-KL_MS_df_2000 <- data.frame(t(KL_MS[1,,]), KL_model_hat_Djump_MS[,1])
-names(KL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_MS_df_2000, border = "blue", ylim = c(min(KL_MS[1,-1,]),max(KL_MS[1,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_MS[,1])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.98*(min(KL_MS[1,-1,])+max(KL_MS[1,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(c) Example MS with 2000 data points")
-
-####
-# Example MS with 10000 data points.
-####
-KL_MS_df_2000 <- data.frame(t(KL_MS[2,,]), KL_model_hat_Djump_MS[,2])
-names(KL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-
-# Plot a boxplot: set the y range in boxplot graph without the first column.
-boxplot(KL_MS_df_2000, border = "blue", ylim = c(min(KL_MS[2,-1,]),max(KL_MS[2,-1,])))
-
-# Add some lines
-lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
-      lty = "dashed", col = "black") # asymptotic E[KL]
-
-lines(1:Kmax, colMeans(t(KL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[KL]
-
-lines(1:21, mean(KL_model_hat_Djump_MS[,2])*matrix(1,1,21),
-      col = "green", pch = 4, type = "o") # asymptotic E[KL]
-
-# Make a legend for lines
-legend(8, 0.96*(min(KL_MS[2,-1,])+max(KL_MS[2,-1,])),
-       legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
-       col = c("black", "blue","green"),
-       lty = c("dashed","solid","solid"),
-       pch = c(NA, NA, 4))
-title("(d) Example MS with 10000 data points")
-
-op <- par(mfrow = c(1, 1))
-dev.off()
-
-#####################################
-# Jensen-Kullback-Leibler divergence.
-# Default value: show_JKL <- FALSE
-#####################################
-show_JKL <- FALSE
-
-if (show_JKL == TRUE){
-  pdf("Boxplot_JKL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
+if (plot_boxplot_KL == TRUE){
+  pdf("Boxplot_KL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
   op <- par(mfrow = c(2, 2))
-  
+
   ####
   # Example WS with 2000 data points.
   ####
-  
+
+  # Create a data frame that combines all interested boxplots for WS case using jump criterion
+  KL_WS_df_2000 <- data.frame(t(KL_WS[1,,]), KL_model_hat_Djump_WS[,1])
+  names(KL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(KL_WS_df_2000, border = "blue", ylim = c(min(KL_WS[1,-1,]),max(KL_WS[1,-1,])))
+
+  # Add some lines
+  lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
+        lty = "dashed", col = "black") # asymptotic E[KL]
+
+  lines(1:Kmax, colMeans(t(KL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[KL]
+
+  lines(1:21, mean(KL_model_hat_Djump_WS[,1])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[KL]
+
+  # Make a legend for lines
+  legend(8, 0.98*(min(KL_WS[1,-1,])+max(KL_WS[1,-1,])),
+         legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(a) Example WS with 2000 data points")
+
+  ####
+  # Example WS with 10000 data points.
+  ####
+  KL_WS_df_2000 <- data.frame(t(KL_WS[2,,]), KL_model_hat_Djump_WS[,2])
+  names(KL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(KL_WS_df_2000, border = "blue", ylim = c(min(KL_WS[2,-1,]),max(KL_WS[2,-1,])))
+
+  # Add some lines
+  lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
+        lty = "dashed", col = "black") # asymptotic E[KL]
+
+  lines(1:Kmax, colMeans(t(KL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[KL]
+
+  lines(1:21, mean(KL_model_hat_Djump_WS[,2])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[KL]
+
+  # Make a legend for lines
+  legend(8, 0.96*(min(KL_WS[2,-1,])+max(KL_WS[2,-1,])),
+         legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(b) Example WS with 10000 data points")
+
+  ####
+  # Example MS with 2000 data points.
+  ####
+  KL_MS_df_2000 <- data.frame(t(KL_MS[1,,]), KL_model_hat_Djump_MS[,1])
+  names(KL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(KL_MS_df_2000, border = "blue", ylim = c(min(KL_MS[1,-1,]),max(KL_MS[1,-1,])))
+
+  # Add some lines
+  lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
+        lty = "dashed", col = "black") # asymptotic E[KL]
+
+  lines(1:Kmax, colMeans(t(KL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[KL]
+
+  lines(1:21, mean(KL_model_hat_Djump_MS[,1])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[KL]
+
+  # Make a legend for lines
+  legend(8, 0.98*(min(KL_MS[1,-1,])+max(KL_MS[1,-1,])),
+         legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(c) Example MS with 2000 data points")
+
+  ####
+  # Example MS with 10000 data points.
+  ####
+  KL_MS_df_2000 <- data.frame(t(KL_MS[2,,]), KL_model_hat_Djump_MS[,2])
+  names(KL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
+
+  # Plot a boxplot: set the y range in boxplot graph without the first column.
+  boxplot(KL_MS_df_2000, border = "blue", ylim = c(min(KL_MS[2,-1,]),max(KL_MS[2,-1,])))
+
+  # Add some lines
+  lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
+        lty = "dashed", col = "black") # asymptotic E[KL]
+
+  lines(1:Kmax, colMeans(t(KL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[KL]
+
+  lines(1:21, mean(KL_model_hat_Djump_MS[,2])*matrix(1,1,21),
+        col = "green", pch = 4, type = "o") # asymptotic E[KL]
+
+  # Make a legend for lines
+  legend(8, 0.96*(min(KL_MS[2,-1,])+max(KL_MS[2,-1,])),
+         legend = c("asymptotic E[KL]", "empirical E[KL]", "E[KL] of the selected K"),
+         col = c("black", "blue","green"),
+         lty = c("dashed","solid","solid"),
+         pch = c(NA, NA, 4))
+  title("(d) Example MS with 10000 data points")
+
+  op <- par(mfrow = c(1, 1))
+  dev.off()
+
+}
+
+#####################################
+# Jensen-Kullback-Leibler divergence.
+#####################################
+
+if (plot_boxplot_JKL == TRUE){
+  pdf("Boxplot_JKL_100_Trials_Djump_WS_MS.pdf",  width = 11.69, height = 8.27)
+  op <- par(mfrow = c(2, 2))
+
+  ####
+  # Example WS with 2000 data points.
+  ####
+
   # Create a data frame that combines all interested boxplots for WS case using jump criterion
   JKL_WS_df_2000 <- data.frame(t(JKL_WS[1,,]), JKL_model_hat_Djump_WS[,1])
   names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-  
+
   # Plot a boxplot: set the y range in boxplot graph without the first column.
   boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[1,-1,]),max(JKL_WS[1,-1,])))
-  
+
   # Add some lines
   lines(1:Kmax, complexity_WS[1,1:Kmax]/(2*num_obs[1]),
         lty = "dashed", col = "black") # asymptotic E[JKL]
-  
+
   lines(1:Kmax, colMeans(t(JKL_WS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-  
+
   lines(1:21, mean(JKL_model_hat_Djump_WS[,1])*matrix(1,1,21),
         col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-  
+
   # Make a legend for lines
   legend(8, 0.98*(min(JKL_WS[1,-1,])+max(JKL_WS[1,-1,])),
          legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
@@ -595,25 +579,25 @@ if (show_JKL == TRUE){
          lty = c("dashed","solid","solid"),
          pch = c(NA, NA, 4))
   title("(a) Example WS with 2000 data points")
-  
+
   ####
   # Example WS with 10000 data points.
   ####
   JKL_WS_df_2000 <- data.frame(t(JKL_WS[2,,]), JKL_model_hat_Djump_WS[,2])
   names(JKL_WS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-  
+
   # Plot a boxplot: set the y range in boxplot graph without the first column.
   boxplot(JKL_WS_df_2000, border = "blue", ylim = c(min(JKL_WS[2,-1,]),max(JKL_WS[2,-1,])))
-  
+
   # Add some lines
   lines(1:Kmax, complexity_WS[2,1:Kmax]/(2*num_obs[2]),
         lty = "dashed", col = "black") # asymptotic E[JKL]
-  
+
   lines(1:Kmax, colMeans(t(JKL_WS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-  
+
   lines(1:21, mean(JKL_model_hat_Djump_WS[,2])*matrix(1,1,21),
         col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-  
+
   # Make a legend for lines
   legend(8, 0.96*(min(JKL_WS[2,-1,])+max(JKL_WS[2,-1,])),
          legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
@@ -621,25 +605,25 @@ if (show_JKL == TRUE){
          lty = c("dashed","solid","solid"),
          pch = c(NA, NA, 4))
   title("(b) Example WS with 10000 data points")
-  
+
   ####
   # Example MS with 2000 data points.
   ####
   JKL_MS_df_2000 <- data.frame(t(JKL_MS[1,,]), JKL_model_hat_Djump_MS[,1])
   names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-  
+
   # Plot a boxplot: set the y range in boxplot graph without the first column.
   boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[1,-1,]),max(JKL_MS[1,-1,])))
-  
+
   # Add some lines
   lines(1:Kmax, complexity_MS[1,1:Kmax]/(2*num_obs[1]),
         lty = "dashed", col = "black") # asymptotic E[JKL]
-  
+
   lines(1:Kmax, colMeans(t(JKL_MS[1,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-  
+
   lines(1:21, mean(JKL_model_hat_Djump_MS[,1])*matrix(1,1,21),
         col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-  
+
   # Make a legend for lines
   legend(8, 0.98*(min(JKL_MS[1,-1,])+max(JKL_MS[1,-1,])),
          legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
@@ -647,25 +631,25 @@ if (show_JKL == TRUE){
          lty = c("dashed","solid","solid"),
          pch = c(NA, NA, 4))
   title("(c) Example MS with 2000 data points")
-  
+
   ####
   # Example MS with 10000 data points.
   ####
   JKL_MS_df_2000 <- data.frame(t(JKL_MS[2,,]), JKL_model_hat_Djump_MS[,2])
   names(JKL_MS_df_2000) <- c(as.character(c(1:Kmax)),"SK")
-  
+
   # Plot a boxplot: set the y range in boxplot graph without the first column.
   boxplot(JKL_MS_df_2000, border = "blue", ylim = c(min(JKL_MS[2,-1,]),max(JKL_MS[2,-1,])))
-  
+
   # Add some lines
   lines(1:Kmax, complexity_MS[2,1:Kmax]/(2*num_obs[2]),
         lty = "dashed", col = "black") # asymptotic E[JKL]
-  
+
   lines(1:Kmax, colMeans(t(JKL_MS[2,,])), lty = "solid", col = "blue") # asymptotic E[JKL]
-  
+
   lines(1:21, mean(JKL_model_hat_Djump_MS[,2])*matrix(1,1,21),
         col = "green", pch = 4, type = "o") # asymptotic E[JKL]
-  
+
   # Make a legend for lines
   legend(8, 0.96*(min(JKL_MS[2,-1,])+max(JKL_MS[2,-1,])),
          legend = c("asymptotic E[JKL]", "empirical E[JKL]", "E[JKL] of the selected K"),
@@ -673,9 +657,22 @@ if (show_JKL == TRUE){
          lty = c("dashed","solid","solid"),
          pch = c(NA, NA, 4))
   title("(d) Example MS with 10000 data points")
-  
+
   op <- par(mfrow = c(1, 1))
   dev.off()
-  
+
 }
 
+
+end_time <- Sys.time()
+running_time <- end_time - start_time
+
+return(list(running_time = running_time, model_Djump_WS = model_Djump_WS, model_DDSE_WS = model_DDSE_WS,
+            model_Djump_MS = model_Djump_MS, model_DDSE_MS = model_DDSE_MS, data_capushe_WS = data_capushe_WS,
+            data_capushe_MS = data_capushe_MS, complexity_WS = complexity_WS, contrast_WS = contrast_WS,
+            complexity_MS = complexity_MS, contrast_MS = contrast_MS, KL_WS = KL_WS,
+            KL_model_hat_Djump_WS = KL_model_hat_Djump_WS, KL_model_hat_DDSE_WS = KL_model_hat_DDSE_WS,
+            JKL_WS = JKL_WS, JKL_model_hat_Djump_WS = JKL_model_hat_Djump_WS, JKL_model_hat_DDSE_WS = JKL_model_hat_DDSE_WS,
+            KL_MS = KL_MS, KL_model_hat_Djump_MS = KL_model_hat_Djump_MS, KL_model_hat_DDSE_MS = KL_model_hat_DDSE_MS,
+            JKL_MS = JKL_MS, JKL_model_hat_Djump_MS = JKL_model_hat_Djump_MS, JKL_model_hat_DDSE_MS = JKL_model_hat_DDSE_MS))
+}
