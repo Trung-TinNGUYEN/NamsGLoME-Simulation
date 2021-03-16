@@ -15,9 +15,9 @@
 ##########################################################################################################
 #                                       Install and load NamsGLoME package
 ##########################################################################################################
-
+  
 # Removes all objects from the current workspace (R memory).
-#rm(list = ls())
+rm(list = ls())
 
 # Install the NamsGLoME package to your local machine.
 # install.packages("devtools")
@@ -39,14 +39,6 @@ ny <- 30
 # Hyperparameter rho for (Jensen)-Kullback-Leibler divergence.
 rho = 1/2
 
-# If save_data = TRUE, the outputs of NamsGLoME::simulation() are stored to local machine
-# on Working directory.
-save_data = FALSE
-
-####
-# Error decay (ED) numerical experiments:
-####
-
 ##########################################################################################################
 #                     Initalize the true parameters for simulated data sets:
 # 1. The default parameters: K_true = 2, D = 1, L = 1.
@@ -54,6 +46,15 @@ save_data = FALSE
 ##########################################################################################################
 
 GLoME_true <- NamsGLoME::model_true(K_true = 2, D = 1, L = 1)
+
+##########################################################################################################
+#                   Clustering deduced from the estimated conditional density of GLoME: 
+# Using by a MAP principle with 2000 data points of example WS and MS. The dash and solid black curves
+# present the true and estimated mean functions.
+##########################################################################################################
+
+
+
 
 ##########################################################################################################
 #                         Histogram and boxplot (HB) numerical experiments:
@@ -72,7 +73,7 @@ num_trials_HB <- 2
 
 # Sample sizes used for HB numerical experiments: 2000 10000
 # num_obs_HB <- c(2000, 10000)
-num_obs_HB <- c(1000,2000)
+num_obs_HB <- c(1000, 2000)
 
 # If plot_histogram = TRUE, NamsGLoME::simulation() exports histogram of selected GLoME models 
 # between well-specified (WS) and misspecified (MS) cases using jump and slope criteria over 100 trials.
@@ -85,8 +86,8 @@ num_obs_HB <- c(1000,2000)
 # Perform the HB simulation
 ####
 
-simulation_HB <- NamsGLoME::simulation(num_trials_HB, num_obs_HB, GLoME_true, Kmax, ny, rho, save_data,
-                                    plot_histogram = TRUE, plot_boxplot_KL = TRUE)
+# simulation_HB <- NamsGLoME::simulation(num_trials_HB, num_obs_HB, GLoME_true, Kmax, ny, rho,
+#                                     plot_histogram = TRUE, plot_boxplot_KL = TRUE)
 
 ##########################################################################################################
 #                         Error Decay (HB) numerical experiments:
@@ -102,19 +103,24 @@ simulation_HB <- NamsGLoME::simulation(num_trials_HB, num_obs_HB, GLoME_true, Km
 
 # Number of trials.
 # num_trials_ED <- 30
- num_trials_ED <- 2
+num_trials_ED <- 1
 
 # Sample sizes: 1000  1260  1587  2000  2520  3175  4000  5040  6350  8000 10079.
-num_obs_ED <- round(1000*2.^((0:10)/3))
+# num_obs_ED <- round(1000*2.^((0:10)/3))
+
+# num_obs_ED <- seq(100, 1000, length.out = 11)
+num_obs_ED <- round(seq(1000, 2000, length.out = 11))
 
 # If plot_error_decay_KL = TRUE, NamsGLoME::simulation() exports error decay (ED) of 
 # Tensorized Kullback-Leibler divergence between the true and selected densities 
 # based on the jump criterion, represented in a log-log scale, using num_trials_ED:
 
 ####
-# Perform the ED simulation 
+# Perform the ED simulation   
 ####
 
-simulation_ED <- NamsGLoME::simulation(num_trials_ED, num_obs_ED, GLoME_true, Kmax, ny, rho, save_data,
-                                       plot_error_decay_KL = TRUE)
+plot_error_decay_KL = TRUE
+simulation_ED <- NamsGLoME::simulation(num_trials_ED, num_obs_ED, GLoME_true, Kmax, ny,
+                                       rho, plot_error_decay_KL = TRUE)
 
+  

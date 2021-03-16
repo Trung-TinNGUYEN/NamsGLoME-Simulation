@@ -19,7 +19,9 @@ Imports:
     graphics,
     capushe,
     xLLiM,
-    matrixcalc
+    matrixcalc,
+    ggplot2,
+    gridExtra
 Collate:
     utils.R
     logsumexp.R
