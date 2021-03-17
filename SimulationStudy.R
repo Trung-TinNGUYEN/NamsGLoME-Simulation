@@ -1,10 +1,14 @@
 ##########################################################################################################
 #   Non-asymptotic Penalization Criteria for Model Selection in Mixture of Experts (MoE) Models:
 #
-# 1. Comparison histogram of selected Gaussian localized MoE (GLoME) models between well-specified (WS)
+# 1.  Clustering deduced from the estimated conditional density of GLoME: 
+#     Using by a MAP principle with 2000 data points of example WS and MS. The dash and solid black curves
+#     present the true and estimated mean functions.
+# 2. a. Comparison histogram of selected Gaussian localized MoE (GLoME) models between well-specified (WS)
 #     and misspecified (MS) cases using jump and slope criteria over 100 trials.
-# 2. Box-plots of the tensorized (Jensen)-Kullback-Leibler ((J)KL) divergence according to the number
+#    b. Box-plots of the tensorized (Jensen)-Kullback-Leibler ((J)KL) divergence according to the number
 #     of mixture components using the jump criterion over 100 trials.
+#    c. Plot of the selected model dimension using the jump and slop criteria.
 # 3. Error decay of tensorized (J)KL divergence between the true and selected
 #   densities based on the jump criterion, represented in a log-log scale, using 30 trials.
 #   A free least-square regression with standard error and a regression with slope −1 were
@@ -56,7 +60,7 @@ GLoME_true <- NamsGLoME::model_true(K_true = 2, D = 1, L = 1)
 #                     Perform a specified task based on your seletion:
 # If input_task == :
 # "1". Clustering deduced from the estimated conditional density of GLoME.
-# "2". Histogram and boxplot (HB) numerical experiments.
+# "2". Histogram, boxplot (HB) and slope heuristic numerical experiments.
 # "3". Error Decay (HB) numerical experiments.
 # "4". Stop the this experiment.
 ##############################################################################################################
@@ -64,7 +68,7 @@ input_task = 0 # Defaut task
 
 while (input_task != 4){
   
-  input_task <- readline(prompt = "1 = Clustering, 2 = Histogram, 3 = Box-plot, 4 = Stop: Type input_task = ")
+  input_task <- readline(prompt = "1 = Clustering, 2 = Histogram Boxplot, 3 = Error Decay, 4 = Stop: Type input_task = ")
   
   if (input_task == 1){
     ##########################################################################################################
@@ -77,7 +81,7 @@ while (input_task != 4){
                                            plot_clustering_samples = TRUE)
   } else if (input_task == 2){
     ##########################################################################################################
-    #                         Histogram and boxplot (HB) numerical experiments:
+    #                         Histogram, boxplot (HB) and slope heuristic numerical experiments:
     # WARNING: RUNNING TIME = 24 hours.
     # Machine: Dell Lattitude 5490 (Intel(R) Core(TM) i5-8250U CPU @ 1.6GHz, 8GB RAM).
     # Hyperparameters: We run our experiments on 2000 and 10000 data points over 100 trials,
@@ -105,8 +109,9 @@ while (input_task != 4){
     # Perform the HB simulation
     ####
     
-    simulation_HB <- NamsGLoME::simulation(num_trials_HB, num_obs_HB, GLoME_true, Kmax, ny, rho,
-                                        plot_histogram = TRUE, plot_boxplot_KL = TRUE)
+      simulation_HB <- NamsGLoME::simulation(num_trials_HB, num_obs_HB, GLoME_true, Kmax, ny, rho,
+                                          plot_histogram = TRUE, plot_boxplot_KL = TRUE, 
+                                          plot_slope_heuristic = TRUE)
     
   } else if (input_task == 3){
     ##########################################################################################################
@@ -143,7 +148,10 @@ while (input_task != 4){
     
   }
   if ((input_task != 1)&&(input_task != 2)&&(input_task != 3)&&(input_task != 4)){
-    print("Please run the program again such that input_task belongs to {1,2,3,4}!")
+    print("Please run the program again such that the input_task belongs to {1,2,3,4}!")
+  }
+  if (input_task == 4){
+    print("Thank you for your time on playing with GLoME models. Hope to see you again soon!")
   }
 }
 

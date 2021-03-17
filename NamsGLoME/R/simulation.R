@@ -3,7 +3,7 @@ simulation = function(num_trials = 1, num_obs = 2000, GLoME_true, Kmax = 20, ny 
                       plot_histogram = FALSE, plot_boxplot_KL = FALSE, plot_boxplot_JKL = FALSE,
                       plot_error_decay_KL = FALSE, plot_error_decay_JKL = FALSE,  save_data = FALSE,
                       t_constant_WS = 3, t_constant_MS = 20, plot_clustering_samples = FALSE,
-                      model_hat_WS = 2, model_hat_MS = 4){
+                      model_hat_WS = 2, model_hat_MS = 4, plot_slope_heuristic = FALSE){
 
   # %%%%%%%%%%%%%%%%% Non-asymptotic Model Selection in Mixture of Experts Models %%%%%%%%%%%%%%%%%%%%%%
   # %% Author: TrungTin Nguyen (14-03-2021) - tinnguyen0495@gmail.com
@@ -62,6 +62,7 @@ simulation = function(num_trials = 1, num_obs = 2000, GLoME_true, Kmax = 20, ny 
   # % - plot_error_decay_KL = TRUE, plot_error_decay_JKL = TRUE: Error decay of tensorized
   # %   (J)KL divergence between the true and selected  densities based on the jump criterion,
   # %   represented in a log-log scale, using 30 trials.
+  # % - plot_slope_heuristic = TRUE: Plot of the selected model dimension using the jump and slope criteria.
   # % - t_constant_WS = 3, t_constant_MS = 20: Default values for contanst in error decays.
 
   # % - plot_clustering_samples = TRUE: Perform clustering and regression tasks
@@ -118,7 +119,7 @@ import::from(xLLiM, gllim)
 # The capushe function proposes two algorithms based on the slope heuristics
 # to calibrate penalties in the context of model selection via penalization.
 #install.packages("capushe")
-import::from(capushe, capushe)
+import::from(capushe, capushe, Djump, DDSE)
 
 # Create Elegant Data Visualisations Using the Grammar of Graphics:
 # A system for 'declaratively' creating graphics, based on "The Grammar of Graphics".
@@ -228,6 +229,7 @@ JKL_MS <- Inf*array(1, dim = c(length(num_obs), Kmax, num_trials))
 # KL for the selected model over all trials on num_obs samples using Djump and DDSE.
 JKL_model_hat_Djump_MS <- JKL_model_hat_DDSE_MS <- matrix(0, num_trials, length(num_obs))
 
+
 ##########################################################################################################
 # Generate simulated data sets (WS and MS) and estimate the parameters of GLoME models
 ##########################################################################################################
@@ -235,7 +237,7 @@ JKL_model_hat_Djump_MS <- JKL_model_hat_DDSE_MS <- matrix(0, num_trials, length(
 # Save running time for this experiments
 start_time <- Sys.time()
 
-if (plot_clustering_samples == FALSE){
+  if ((plot_clustering_samples == FALSE)&&((plot_histogram == TRUE)||(plot_boxplot_KL == TRUE))){
   ####
   # For each trial (t), each sample size (n), each GLoME model (K), we first use GLLiM model
   # to estimate the parameters of inverse regression.
@@ -418,9 +420,39 @@ if (plot_clustering_samples == FALSE){
       JKL_model_hat_Djump_MS[t, n] <- JKL_MS[n, as.numeric(model_Djump_MS[t, n]),t]
       JKL_model_hat_DDSE_MS[t, n] <- JKL_MS[n, as.numeric(model_DDSE_MS[t, n]),t]
 
+      ####
+      # Slope heuristics: plot of the selected model dimension using the in the first trial.
+      ####
+      if ((plot_slope_heuristic == TRUE) && (t == 1) && (data_capushe_WS[[t]]$n == 2000)){
+
+        pdf("Plot_Slope_Heuristics_WS_MS_2000.pdf",  width = 10, height = 10)
+        op <- par(mfrow = c(2, 2))
+        # Jump criterion:
+        plot(Djump(as.data.frame(data_capushe_WS[[t]]$dataCapushe)), newwindow=FALSE)
+        plot(Djump(as.data.frame(data_capushe_MS[[t]]$dataCapushe)), newwindow=FALSE)
+        # Slope criterion:
+        plot(DDSE(as.data.frame(data_capushe_WS[[t]]$dataCapushe)), newwindow=FALSE)
+        plot(DDSE(as.data.frame(data_capushe_MS[[t]]$dataCapushe)), newwindow=FALSE)
+
+        op <- par(mfrow = c(1, 1))
+        dev.off()
+      }
+      if ((plot_slope_heuristic == TRUE) && (t == 1) && (data_capushe_WS[[t]]$n == 10000)){
+
+        pdf("Plot_Slope_Heuristics_WS_MS_10000.pdf",  width = 10, height = 10)
+        op <- par(mfrow = c(2, 2))
+        # Jump criterion:
+        plot(Djump(as.data.frame(data_capushe_WS[[t]]$dataCapushe)), newwindow=FALSE)
+        plot(Djump(as.data.frame(data_capushe_MS[[t]]$dataCapushe)), newwindow=FALSE)
+        # Slope criterion:
+        plot(DDSE(as.data.frame(data_capushe_WS[[t]]$dataCapushe)), newwindow=FALSE)
+        plot(DDSE(as.data.frame(data_capushe_MS[[t]]$dataCapushe)), newwindow=FALSE)
+
+        op <- par(mfrow = c(1, 1))
+        dev.off()
+      }
     }
   }
-
 }
 
 ##########################################################################################################
@@ -460,6 +492,7 @@ if (plot_histogram == TRUE){
   op <- par(mfrow = c(1, 1))
   dev.off()
 }
+
 
 ##########################################################################################################
 # Box-plot of the tensorized (Jensen)-Kullback-Leibler divergence according to the number of
@@ -585,6 +618,7 @@ if (plot_boxplot_KL == TRUE){
 
 }
 
+
 #####################################
 # Jensen-Kullback-Leibler divergence.
 #####################################
@@ -704,6 +738,7 @@ if (plot_boxplot_JKL == TRUE){
 
 }
 
+
 ##########################################################################################################
 # Error decay of tensorized (J)KL divergence between the true and selected
 #   densities based on the jump criterion, represented in a log-log scale, using 30 trials.
@@ -770,6 +805,7 @@ if (plot_error_decay_KL == TRUE){
   grid.arrange(KL_model_hat_Djump_WS_ggplot, KL_model_hat_Djump_MS_ggplot, nrow = 1)
   dev.off()
 }
+
 
 #####################################
 # Jensen-Kullback-Leibler divergence.
@@ -871,6 +907,7 @@ if (save_data == TRUE){
   saveRDS(KL_model_hat_Djump_MS_slope_lm$coefficients[2], file = "KL_model_hat_Djump_MS_slope_lm.rds")
 
 }
+
 
 
 ##########################################################################################################
@@ -1253,31 +1290,28 @@ if (plot_clustering_samples == TRUE){
 
 end_time <- Sys.time()
 running_time <- end_time - start_time
+
 ###########################################################################################################
 # Output list
 ###########################################################################################################
 output <- list(running_time = running_time)
 
-if ((plot_histogram == TRUE)||(plot_boxplot_KL == TRUE)||(plot_boxplot_JKL == TRUE)||
-     (plot_error_decay_KL == TRUE)||(plot_error_decay_JKL == TRUE)){
+if (((plot_histogram == TRUE)||(plot_boxplot_KL == TRUE)||(plot_boxplot_JKL == TRUE)||
+     (plot_error_decay_KL == TRUE)||(plot_error_decay_JKL == TRUE))&&(plot_clustering_samples == FALSE)){
 
-  output <- list(output, model_Djump_WS = model_Djump_WS, model_DDSE_WS = model_DDSE_WS,
+  output <- list(running_time = running_time, model_Djump_WS = model_Djump_WS, model_DDSE_WS = model_DDSE_WS,
                  model_Djump_MS = model_Djump_MS, model_DDSE_MS = model_DDSE_MS, data_capushe_WS = data_capushe_WS,
                  data_capushe_MS = data_capushe_MS, complexity_WS = complexity_WS, contrast_WS = contrast_WS,
-                 complexity_MS = complexity_MS, contrast_MS = contrast_MS, KL_WS = KL_WS
-                )
-}
-
-if (plot_clustering_samples == FALSE){
-  output <- list(output,
+                 complexity_MS = complexity_MS, contrast_MS = contrast_MS, KL_WS = KL_WS,
                  KL_model_hat_Djump_WS = KL_model_hat_Djump_WS, KL_model_hat_DDSE_WS = KL_model_hat_DDSE_WS,
                  JKL_WS = JKL_WS, JKL_model_hat_Djump_WS = JKL_model_hat_Djump_WS, JKL_model_hat_DDSE_WS = JKL_model_hat_DDSE_WS,
                  KL_MS = KL_MS, KL_model_hat_Djump_MS = KL_model_hat_Djump_MS, KL_model_hat_DDSE_MS = KL_model_hat_DDSE_MS,
                  JKL_MS = JKL_MS, JKL_model_hat_Djump_MS = JKL_model_hat_Djump_MS, JKL_model_hat_DDSE_MS = JKL_model_hat_DDSE_MS,
                  KL_model_hat_Djump_WS_slope_lm =  lm(log(colMeans(KL_model_hat_Djump_WS)) ~ log(num_obs))$coefficients[2],
-                  KL_model_hat_Djump_MS_slope_lm = lm(log(colMeans(KL_model_hat_Djump_MS)) ~ log(num_obs))$coefficients[2]
-                  )
+                 KL_model_hat_Djump_MS_slope_lm = lm(log(colMeans(KL_model_hat_Djump_MS)) ~ log(num_obs))$coefficients[2]
+                )
 }
+
 
 return(output)
 
