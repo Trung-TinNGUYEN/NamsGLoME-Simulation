@@ -2,7 +2,8 @@
 simulation = function(num_trials = 1, num_obs = 2000, GLoME_true, Kmax = 20, ny = 30, rho = 1/2,
                       plot_histogram = FALSE, plot_boxplot_KL = FALSE, plot_boxplot_JKL = FALSE,
                       plot_error_decay_KL = FALSE, plot_error_decay_JKL = FALSE,  save_data = FALSE,
-                      t_constant_WS = 3, t_constant_MS = 20, plot_clustering_samples = FALSE){
+                      t_constant_WS = 3, t_constant_MS = 20, plot_clustering_samples = FALSE,
+                      model_hat_WS = 2, model_hat_MS = 4){
 
   # %%%%%%%%%%%%%%%%% Non-asymptotic Model Selection in Mixture of Experts Models %%%%%%%%%%%%%%%%%%%%%%
   # %% Author: TrungTin Nguyen (14-03-2021) - tinnguyen0495@gmail.com
@@ -64,7 +65,11 @@ simulation = function(num_trials = 1, num_obs = 2000, GLoME_true, Kmax = 20, ny 
   # % - t_constant_WS = 3, t_constant_MS = 20: Default values for contanst in error decays.
 
   # % - plot_clustering_samples = TRUE: Perform clustering and regression tasks
-  # % - on simulated data sets with num_obs samples
+  # %   on simulated data sets with num_obs samples:
+  # % - model_hat_WS = 2, model_hat_MS = 4: after running 100 trials on our WS/MS simulated data sets,
+  # %   model with model_hat_WS(MS) = 2(4) mixture components are selected based on the histogram of selected model.
+  # %   However, the option plot_clustering_samples is still valuable for users if they change
+  # %   model_hat_MS to their desired values.
 
   # %%%% Output %%%%
 
@@ -140,6 +145,7 @@ import::from(fields, image.plot)
 
 # gridBase: Integration of base and grid graphics
 # Integration of base and grid graphics
+import::from(grid, viewport, unit)
 
 ##########################################################################################################
 # Create the true parameters for simulated data sets based on the GLoME_true structure.
@@ -878,7 +884,7 @@ if (plot_clustering_samples == TRUE){
   #########
   #WS case
   #########
-  pdf("Clustering_2000_realization_WS_test.pdf", width = 11.69, height = 8.27)
+  pdf("Clustering_2000_realization_WS.pdf", width = 11.69, height = 8.27)
   # ggplot first
   sample_data_WS <- NamsGLoME::sample_GLLiM(pi_true, c_true, Gamma_true, b_true_WS,
                                             A_true_WS, sigma_true, n = num_obs , ny = 1)
@@ -891,8 +897,10 @@ if (plot_clustering_samples == TRUE){
   Y_WS <- sample_data_WS$y
   E_WS <- as.factor(sample_data_WS$stats$klasy)
 
-  #
-  model_hat_WS <- 2
+  # In our experiment, after running 100 trials on our WS simulated data sets, we decided to display the
+  # model with model_hat_WS = 2 mixture components based on the histogram of selected model.
+  # However, the option plot_clustering_samples is still valuable for users if they change
+  # model_hat_MS to their desired values.
 
   inverse_model_hat_WS <- gllim(t(Y_WS), t(X_WS), in_K =  model_hat_WS, maxiter = 1000)
   forward_model_hat_WS <- gllim_inverse_dens(t(X_WS), inverse_model_hat_WS, t(Y_WS))
@@ -994,8 +1002,8 @@ if (plot_clustering_samples == TRUE){
   ####
 
   # Creating vector of colors for each class.
-  #color_class_posterior_WS <- rainbow(model_hat_WS) #
-  color_class_posterior_WS <- c("#00FFFFFF","#FF0000FF" )
+  color_class_posterior_WS <- rainbow(model_hat_WS)
+  #color_class_posterior_WS <- c("#00FFFFFF","#FF0000FF" )
   shape_class_posterior_WS <- c(1:model_hat_WS)
 
   clustering_2000_posterior_WS <- ggplot()
@@ -1029,7 +1037,7 @@ if (plot_clustering_samples == TRUE){
   vp.22 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
                     y = 0.5, x = 0.5)
 
-  # plot your base graphics
+  # Plot your base graphics
   par(mfrow=c(2,2))
 
   length_plot_3D  <- 200
@@ -1046,22 +1054,13 @@ if (plot_clustering_samples == TRUE){
     }
   }
 
-  forward_estimate_WS_3D <- persp3D(data_x_estimate_WS_3D, data_y_estimate_WS_3D , forward_model_hat_WS_3D,
-          col = topo.colors(length_plot_3D^2),
-          xlab = "X", ylab = "Y", zlab = "Conditional density")
+  plot(0,type='n',axes=FALSE,ann=FALSE)
+  plot(0,type='n',axes=FALSE,ann=FALSE)
   forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
                                        xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
                                        main = "(c) 2D view of the resulting conditional density
                                             with the 2 regression components")
-  forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
-                                       xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
-                                       main = "(c) 2D view of the resulting conditional density
-                                            with the 2 regression components")
-  forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
-                                       xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
-                                       main = "(c) 2D view of the resulting conditional density
-                                            with the 2 regression components")
-  # plot the ggplot using the print command
+  # Plot the ggplot using the print command
   print(forward_model_true_2000_realization_WS, vp = vp.11)
   print(clustering_2000_realization_WS, vp = vp.12)
   print(clustering_2000_posterior_WS, vp = vp.22)
@@ -1069,221 +1068,217 @@ if (plot_clustering_samples == TRUE){
 
   dev.off()
 
+  ########
+  #MS case
+  ########
+
+  pdf("Clustering_2000_realization_MS.pdf", width = 11.69, height = 8.27)
+  sample_data_MS <- NamsGLoME::sample_GLoME_parabola(pi_true, c_true, Gamma_true, beta0_MS,
+                                                     beta_MS, beta2_MS, sigma_true, n = num_obs, ny = 1)
+
+  X_MS <- sample_data_MS$X
+  Y_MS <- sample_data_MS$y
+  E_MS <- as.factor(sample_data_MS$stats$klasy)
+
+  # In our experiment, after running 100 trials on our MS simulated data sets, we decided to display the
+  # model with model_hat_MS = 4 mixture components. However, this code is still valuable for users if they change
+  # model_hat_MS to their desired values.
+
+  inverse_model_hat_MS <- gllim(t(Y_MS), t(X_MS), in_K =  model_hat_MS, maxiter = 1000)
+  forward_model_hat_MS <- gllim_inverse_dens(t(X_MS), inverse_model_hat_MS, t(Y_MS))
+
+  ####
+  #Plot typical realization and the true mean functions E(Y_MS|X_MS, \psi_0)
+  ####
+
+  df_MS <- data.frame(X_MS, Y_MS, E_MS)
+  names(df_MS) <- c('X', 'Y', 'Class')
+  length_plot <- 200
+
+  forward_model_true_2000_realization_MS <- ggplot() +
+    geom_point(data = df_MS, aes(x=X , y=Y , color = Class, shape = Class)) +
+    scale_color_manual(values= c("#00FFFFFF","#FF0000FF" )) + theme(legend.position="none")+
+    scale_shape_manual(values=c(2,1))
+
+  # Plot the true mean functions E(Y_MS|X_MS, \psi_0)
+  gmm_MS <- list()
+  gmm_MS$weights <- pi_true
+  gmm_MS$means <- c_true
+  gmm_MS$covariances <- Gamma_true
+
+  data_x_MS <- matrix(seq(from = min(X_MS),
+                          to = max(X_MS), length.out = length_plot), nrow = length_plot)
+  data_y_MS <- matrix(0, nrow = length_plot, 1)
+  MS_gate <- posterior_mvGMM(data_x_MS, gmm_MS)$tau
+
+  data_y_MS <- rowSums((data_x_MS%*%beta_MS + data_x_MS^2%*%beta2_MS+
+                          do.call(rbind, replicate(length_plot, matrix(beta0_MS,nrow = 1,ncol = length(beta0_MS)),
+                                                   simplify=FALSE)))*MS_gate)
+
+  data_xy_MS <- data.frame(data_x_MS = data_x_MS,data_y_MS = data_y_MS)
+  forward_model_true_2000_realization_MS <- forward_model_true_2000_realization_MS +
+    geom_line(data = data_xy_MS, aes(x= data_x_MS , y= data_y_MS), color = "black", linetype = "dashed") +
+    theme(legend.position = "none") + ggtitle("(a) Typical realization of example MS.")
+
+  ####
+  # Figures of clustering deduced from the estimated conditional density by a MAP principle
+  # Maximum a posteriori probability for the laten variable Z, p(Z_i=k|X_i,Y_i, \widehat{m})
+  # Find the maximum position for each row of a matrix, breaking ties at random.
+  ####
+
+  estimate_class_MS <- as.factor(max.col(inverse_model_hat_MS$r))
+  # Visualize the resulted clustering on MS data set.
+  estimate_class_MS_df <- data.frame(X_MS, Y_MS, estimate_class_MS, t(forward_model_hat_MS$x_exp))
+  names(estimate_class_MS_df) <- c('X_MS', 'Y_MS', 'Class','PostMeans')
+
+  # Calculate the whole estimated mean function
+
+  # Creating vector of colors for each class.
+  color_class_clustering_MS <- rainbow(model_hat_MS)
+  shape_class_clustering_MS <- c(1:model_hat_MS)
+
+  clustering_2000_realization_MS <- ggplot() +
+    geom_point(data = estimate_class_MS_df,
+               aes(x=  X_MS, y= Y_MS, shape=Class, color=Class)) +
+    scale_color_manual(values = color_class_clustering_MS) + scale_shape_manual(values=shape_class_clustering_MS)+
+    labs(x = " X" , y =  "Y")
+
+  for (k in 1:model_hat_MS){
+    gllim_MS_As<-
+      forward_model_hat_MS$As[,,k]
+
+    gllim_MS_bs<-
+      forward_model_hat_MS$bs[,k]
+
+    data_k <- estimate_class_MS_df[which(estimate_class_MS==k),]
+
+    data_k_x <- seq(from = min(data_k$X_MS), to = max(data_k$X_MS), length.out = length_plot)
+    data_k_y <- gllim_MS_As*data_k_x + gllim_MS_bs
+
+    data_subClass <- data.frame(data_k_x = data_k_x, data_k_y = data_k_y)
+    clustering_2000_realization_MS <- clustering_2000_realization_MS +
+      geom_line(data = data_subClass, aes(x= data_k_x , y= data_k_y), color = color_class_clustering_MS[k])
+  }
+  # Calculate the whole estimated mean function
+  data_x_estimate_MS <- seq(from = min(estimate_class_MS_df$X_MS),
+                            to = max(estimate_class_MS_df$X_MS), length.out = length_plot)
+  data_y_estimate_MS <- seq(from = min(estimate_class_MS_df$Y_MS),
+                            to = max(estimate_class_MS_df$Y_MS), length.out = length_plot)
+
+  data_y_estimate_MS_gllim_dens <- gllim_inverse_dens(matrix(data_x_estimate_MS,ncol = length_plot),
+                                                      inverse_model_hat_MS,
+                                                      matrix(data_y_estimate_MS, ncol = length_plot))
+
+  data_y_estimate_MS_estiMeans <- data_y_estimate_MS_gllim_dens$x_exp
+
+  data_y_estimate_MS_estiMeans <- data.frame(data_x_estimate_MS = data_x_estimate_MS,
+                                             data_y_estimate_MS_estiMeans = t(data_y_estimate_MS_estiMeans))
+
+  clustering_2000_realization_MS <- clustering_2000_realization_MS +
+    geom_line(data = data_y_estimate_MS_estiMeans, aes(x= data_x_estimate_MS , y= data_y_estimate_MS_estiMeans), color = "black")+
+    theme(legend.position = "none") + ggtitle("(b) Clustering by GLoME in MS case.")
+
+  ####
+  # Plot the estimated posterior of mixture proportions.
+  ####
+
+  # Creating vector of colors for each class.
+  color_class_posterior_MS <- rainbow(model_hat_MS)
+  #color_class_posterior_MS <- c("#FF0000FF","#00FFFFFF", "#80FF00FF","#8000FFFF")
+  shape_class_posterior_MS <- c(1:model_hat_MS)
+
+  clustering_2000_posterior_MS <- ggplot()
+  for (k in 1:model_hat_MS){
+
+    data_Posterior <- estimate_class_MS_df
+    data_k_x <- seq(from = min(data_Posterior$X_MS), to = max(data_Posterior$X_MS), length.out = length_plot)
+    data_k_y <- seq(from = min(data_Posterior$Y_MS), to = max(data_Posterior$Y_MS), length.out = length_plot)
+
+    # Calculate the estimated posterior for the mixing proportion for each mixture components
+    data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot),
+                                              forward_model_hat_MS,  matrix(data_k_y, ncol = length_plot))
+    data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
+
+    data_estimPosterior <- data.frame(data_k_x = data_k_x, data_k_y_posterior = data_k_y_posterior)
+    clustering_2000_posterior_MS <- clustering_2000_posterior_MS +
+      geom_line(data = data_estimPosterior, aes(x= data_k_x , y= data_k_y_posterior),
+                color = color_class_posterior_MS[k]) +
+      labs(x = "X", y = " Mixing probabilities")
+  }
+  clustering_2000_posterior_MS <- clustering_2000_posterior_MS +
+    theme(legend.position = "none") + ggtitle("(d) Gating network probabilities.")
+
+  # create an apporpriate viewport.  Modify the dimensions and coordinates as needed
+  vp.11 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
+                    y = 1, x = 0)
+
+  vp.12<- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
+                   y = 1, x = 0.5)
+
+  vp.22 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
+                    y = 0.5, x = 0.5)
+
+  # Plot your base graphics
+  par(mfrow=c(2,2))
+
+  length_plot_3D  <- 200
+
+  data_x_estimate_MS_3D <- seq(from = min(X_MS), to = max(X_MS), length.out = length_plot_3D)
+  data_y_estimate_MS_3D <- seq(from = min(Y_MS), to = max(Y_MS), length.out = length_plot_3D)
+
+  forward_model_hat_MS_3D <- matrix(NA, nrow = length_plot_3D, ncol = length_plot_3D)
+  for (i in 1:length_plot_3D){
+    for (j in 1:length_plot_3D){
+      forward_model_hat_MS_3D[i,j] <-
+        gllim_inverse_dens(matrix(data_x_estimate_MS_3D[i]),
+                           inverse_model_hat_MS, matrix(data_y_estimate_MS_3D[j]))$CLL_vec
+    }
+  }
+
+  plot(0,type='n',axes=FALSE,ann=FALSE)
+  plot(0,type='n',axes=FALSE,ann=FALSE)
+  forward_estimate_MS_2D <- image.plot(data_x_estimate_MS_3D, data_y_estimate_MS_3D, forward_model_hat_MS_3D,
+                                       xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
+                                       main = "(c) 2D view of the resulting conditional density
+                                            with the 2 regression components")
+  # Plot the ggplot using the print command
+  print(forward_model_true_2000_realization_MS, vp = vp.11)
+  print(clustering_2000_realization_MS, vp = vp.12)
+  print(clustering_2000_posterior_MS, vp = vp.22)
+
+
+  dev.off()
+
 }
-
-##########################################################################################################
-# Testing: Combine base and ggplot graphics in R figure window
-
-
-# library(grid)
-# pdf("Clustering_2000_realization_WS_test.pdf", width = 11.69, height = 8.27)
-# # ggplot first
-# sample_data_WS <- NamsGLoME::sample_GLLiM(pi_true, c_true, Gamma_true, b_true_WS,
-#                                           A_true_WS, sigma_true, n = num_obs , ny = 1)
-#
-# # # MS case
-# # sample_data_MS <- NamsGLoME::sample_GLoME_parabola(pi_true, c_true, Gamma_true, beta0_MS,
-# #                                                    beta_MS, beta2_MS, sigma_true, num_obs[n], ny = 1)
-#
-# X_WS <- sample_data_WS$X
-# Y_WS <- sample_data_WS$y
-# E_WS <- as.factor(sample_data_WS$stats$klasy)
-#
-# #
-# model_hat_WS <- 2
-#
-# inverse_model_hat_WS <- gllim(t(Y_WS), t(X_WS), in_K =  model_hat_WS, maxiter = 1000)
-# forward_model_hat_WS <- gllim_inverse_dens(t(X_WS), inverse_model_hat_WS, t(Y_WS))
-#
-# ####
-# #Plot typical realization and the true mean functions E(Y_WS|X_WS, \psi_0)
-# ####
-#
-# df_WS <- data.frame(X_WS, Y_WS, E_WS)
-# names(df_WS) <- c('X', 'Y', 'Class')
-# length_plot <- 200
-#
-# forward_model_true_2000_realization_WS <- ggplot() +
-#   geom_point(data = df_WS, aes(x=X , y=Y , color = Class, shape = Class)) +
-#   scale_color_manual(values= c("#00FFFFFF","#FF0000FF" )) + theme(legend.position="none")+
-#   scale_shape_manual(values=c(2,1))
-#
-# # Plot the true mean functions E(Y_WS|X_WS, \psi_0)
-# gmm_WS <- list()
-# gmm_WS$weights <- pi_true
-# gmm_WS$means <- c_true
-# gmm_WS$covariances <- Gamma_true
-#
-# data_x_WS <- matrix(seq(from = min(X_WS),
-#                         to = max(X_WS), length.out = length_plot), nrow = length_plot)
-# data_y_WS <- matrix(0, nrow = length_plot, 1)
-# WS_gate <- posterior_mvGMM(data_x_WS, gmm_WS)$tau
-#
-# data_y_WS <- rowSums((data_x_WS%*%A_true_WS +
-#                         do.call(rbind, replicate(length_plot, matrix(b_true_WS,nrow = 1,ncol = length(b_true_WS)),
-#                                                  simplify=FALSE)))*WS_gate)
-# #data_y_WS <- rowSums((data_x_WS%*%A_true_WS )*WS_gate)
-#
-# data_xy_WS <- data.frame(data_x_WS = data_x_WS,data_y_WS = data_y_WS)
-# forward_model_true_2000_realization_WS <- forward_model_true_2000_realization_WS +
-#   geom_line(data = data_xy_WS, aes(x= data_x_WS , y= data_y_WS), color = "black", linetype = "dashed") +
-#   theme(legend.position = "none") + ggtitle("(a) Typical realization of example WS.")
-#
-# ####
-# # Figures of clustering deduced from the estimated conditional density by a MAP principle
-# # Maximum a posteriori probability for the laten variable Z, p(Z_i=k|X_i,Y_i, \widehat{m})
-# # Find the maximum position for each row of a matrix, breaking ties at random.
-# ####
-#
-# estimate_class_WS <- as.factor(max.col(inverse_model_hat_WS$r))
-# # Visualize the resulted clustering on WS data set.
-# estimate_class_WS_df <- data.frame(X_WS, Y_WS, estimate_class_WS,
-#                                    t(forward_model_hat_WS$x_exp))
-# names(estimate_class_WS_df) <- c('X_WS', 'Y_WS', 'Class','PostMeans')
-#
-# # Calculate the whole estimated mean function
-#
-# # Creating vector of colors for each class.
-# color_class_clustering_WS <- rainbow(model_hat_WS)
-# shape_class_clustering_WS <- c(1:model_hat_WS)
-#
-# clustering_2000_realization_WS <- ggplot() +
-#   geom_point(data = estimate_class_WS_df,
-#              aes(x=  X_WS, y= Y_WS, shape=Class, color=Class)) +
-#   scale_color_manual(values = color_class_clustering_WS) + scale_shape_manual(values=shape_class_clustering_WS)+
-#   labs(x = " X" , y =  "Y")
-#
-# for (k in 1:model_hat_WS){
-#   gllim_WS_As<-
-#     forward_model_hat_WS$As[,,k]
-#
-#   gllim_WS_bs<-
-#     forward_model_hat_WS$bs[,k]
-#
-#   data_k <- estimate_class_WS_df[which(estimate_class_WS==k),]
-#
-#   data_k_x <- seq(from = min(data_k$X_WS), to = max(data_k$X_WS), length.out = length_plot)
-#   data_k_y <- gllim_WS_As*data_k_x + gllim_WS_bs
-#
-#   data_subClass <- data.frame(data_k_x = data_k_x, data_k_y = data_k_y)
-#   clustering_2000_realization_WS <- clustering_2000_realization_WS +
-#     geom_line(data = data_subClass, aes(x= data_k_x , y= data_k_y), color = color_class_clustering_WS[k])
-# }
-# # Calculate the whole estimated mean function
-# data_x_estimate_WS <- seq(from = min(estimate_class_WS_df$X_WS),
-#                           to = max(estimate_class_WS_df$X_WS), length.out = length_plot)
-# data_y_estimate_WS <- seq(from = min(estimate_class_WS_df$Y_WS),
-#                           to = max(estimate_class_WS_df$Y_WS), length.out = length_plot)
-#
-# data_y_estimate_WS_gllim_dens <- gllim_inverse_dens(matrix(data_x_estimate_WS,ncol = length_plot),
-#                                                     inverse_model_hat_WS,
-#                                                     matrix(data_y_estimate_WS, ncol = length_plot))
-#
-# data_y_estimate_WS_estiMeans <- data_y_estimate_WS_gllim_dens$x_exp
-#
-# data_y_estimate_WS_estiMeans <- data.frame(data_x_estimate_WS = data_x_estimate_WS,
-#                                            data_y_estimate_WS_estiMeans = t(data_y_estimate_WS_estiMeans))
-#
-# clustering_2000_realization_WS <- clustering_2000_realization_WS +
-#   geom_line(data = data_y_estimate_WS_estiMeans, aes(x= data_x_estimate_WS , y= data_y_estimate_WS_estiMeans), color = "black")+
-#   theme(legend.position = "none") + ggtitle("(b) Clustering by GLoME in WS case.")
-#
-# ####
-# # Plot the estimated posterior of mixture proportions.
-# ####
-#
-# # Creating vector of colors for each class.
-# #color_class_posterior_WS <- rainbow(model_hat_WS) #
-# color_class_posterior_WS <- c("#00FFFFFF","#FF0000FF" )
-# shape_class_posterior_WS <- c(1:model_hat_WS)
-#
-# clustering_2000_posterior_WS <- ggplot()
-# for (k in 1:model_hat_WS){
-#
-#   data_Posterior <- estimate_class_WS_df
-#   data_k_x <- seq(from = min(data_Posterior$X_WS), to = max(data_Posterior$X_WS), length.out = length_plot)
-#   data_k_y <- seq(from = min(data_Posterior$Y_WS), to = max(data_Posterior$Y_WS), length.out = length_plot)
-#
-#   # Calculate the estimated posterior for the mixing proportion for each mixture components
-#   data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot),
-#                                             forward_model_hat_WS,  matrix(data_k_y, ncol = length_plot))
-#   data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
-#
-#   data_estimPosterior <- data.frame(data_k_x = data_k_x, data_k_y_posterior = data_k_y_posterior)
-#   clustering_2000_posterior_WS <- clustering_2000_posterior_WS +
-#     geom_line(data = data_estimPosterior, aes(x= data_k_x , y= data_k_y_posterior),
-#               color = color_class_posterior_WS[k]) +
-#     labs(x = "X", y = " Mixing probabilities")
-# }
-# clustering_2000_posterior_WS <- clustering_2000_posterior_WS +
-#   theme(legend.position = "none") + ggtitle("(d) Gating network probabilities.")
-#
-# # create an apporpriate viewport.  Modify the dimensions and coordinates as needed
-# vp.11 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
-#                   y = 1, x = 0)
-#
-# vp.12<- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
-#                 y = 1, x = 0.5)
-#
-# vp.22 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
-#                   y = 0.5, x = 0.5)
-#
-# # plot your base graphics
-# par(mfrow=c(2,2))
-#
-# length_plot_3D  <- 200
-#
-# data_x_estimate_WS_3D <- seq(from = min(X_WS), to = max(X_WS), length.out = length_plot_3D)
-# data_y_estimate_WS_3D <- seq(from = min(Y_WS), to = max(Y_WS), length.out = length_plot_3D)
-#
-# # forward_model_hat_WS_3D <- matrix(NA, nrow = length_plot_3D, ncol = length_plot_3D)
-# # for (i in 1:length_plot_3D){
-# #   for (j in 1:length_plot_3D){
-# #     forward_model_hat_WS_3D[i,j] <-
-# #       gllim_inverse_dens(matrix(data_x_estimate_WS_3D[i]),
-# #                          inverse_model_hat_WS, matrix(data_y_estimate_WS_3D[j]))$CLL_vec
-# #   }
-# # }
-#
-# # forward_estimate_WS_3D <- persp3D(data_x_estimate_WS_3D, data_y_estimate_WS_3D , forward_model_hat_WS_3D,
-# #         col = topo.colors(length_plot_3D^2),
-# #         xlab = "X", ylab = "Y", zlab = "Conditional density")
-# forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
-#                                      xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2))
-# forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
-#                                      xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2))
-# forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
-#                                      xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
-#                                      main = "2D view of the resulting conditional density
-#                                             with the 2 regression components")
-# # plot the ggplot using the print command
-# print(forward_model_true_2000_realization_WS, vp = vp.11)
-# print(clustering_2000_realization_WS, vp = vp.12)
-# print(clustering_2000_posterior_WS, vp = vp.22)
-#
-#
-# dev.off()
-
-
-###########################################################################################################
 
 end_time <- Sys.time()
 running_time <- end_time - start_time
-
+###########################################################################################################
 # Output list
-output <- list(running_time = running_time, model_Djump_WS = model_Djump_WS, model_DDSE_WS = model_DDSE_WS,
-             model_Djump_MS = model_Djump_MS, model_DDSE_MS = model_DDSE_MS, data_capushe_WS = data_capushe_WS,
-             data_capushe_MS = data_capushe_MS, complexity_WS = complexity_WS, contrast_WS = contrast_WS,
-             complexity_MS = complexity_MS, contrast_MS = contrast_MS, KL_WS = KL_WS,
-             KL_model_hat_Djump_WS = KL_model_hat_Djump_WS, KL_model_hat_DDSE_WS = KL_model_hat_DDSE_WS,
-             JKL_WS = JKL_WS, JKL_model_hat_Djump_WS = JKL_model_hat_Djump_WS, JKL_model_hat_DDSE_WS = JKL_model_hat_DDSE_WS,
-             KL_MS = KL_MS, KL_model_hat_Djump_MS = KL_model_hat_Djump_MS, KL_model_hat_DDSE_MS = KL_model_hat_DDSE_MS,
-             JKL_MS = JKL_MS, JKL_model_hat_Djump_MS = JKL_model_hat_Djump_MS, JKL_model_hat_DDSE_MS = JKL_model_hat_DDSE_MS)
+###########################################################################################################
+output <- list(running_time = running_time)
+
+if ((plot_histogram == TRUE)||(plot_boxplot_KL == TRUE)||(plot_boxplot_JKL == TRUE)||
+     (plot_error_decay_KL == TRUE)||(plot_error_decay_JKL == TRUE)){
+
+  output <- list(output, model_Djump_WS = model_Djump_WS, model_DDSE_WS = model_DDSE_WS,
+                 model_Djump_MS = model_Djump_MS, model_DDSE_MS = model_DDSE_MS, data_capushe_WS = data_capushe_WS,
+                 data_capushe_MS = data_capushe_MS, complexity_WS = complexity_WS, contrast_WS = contrast_WS,
+                 complexity_MS = complexity_MS, contrast_MS = contrast_MS, KL_WS = KL_WS
+                )
+}
+
 if (plot_clustering_samples == FALSE){
   output <- list(output,
+                 KL_model_hat_Djump_WS = KL_model_hat_Djump_WS, KL_model_hat_DDSE_WS = KL_model_hat_DDSE_WS,
+                 JKL_WS = JKL_WS, JKL_model_hat_Djump_WS = JKL_model_hat_Djump_WS, JKL_model_hat_DDSE_WS = JKL_model_hat_DDSE_WS,
+                 KL_MS = KL_MS, KL_model_hat_Djump_MS = KL_model_hat_Djump_MS, KL_model_hat_DDSE_MS = KL_model_hat_DDSE_MS,
+                 JKL_MS = JKL_MS, JKL_model_hat_Djump_MS = JKL_model_hat_Djump_MS, JKL_model_hat_DDSE_MS = JKL_model_hat_DDSE_MS,
                  KL_model_hat_Djump_WS_slope_lm =  lm(log(colMeans(KL_model_hat_Djump_WS)) ~ log(num_obs))$coefficients[2],
-                  KL_model_hat_Djump_MS_slope_lm = lm(log(colMeans(KL_model_hat_Djump_MS)) ~ log(num_obs))$coefficients[2])
+                  KL_model_hat_Djump_MS_slope_lm = lm(log(colMeans(KL_model_hat_Djump_MS)) ~ log(num_obs))$coefficients[2]
+                  )
 }
 
 return(output)
+
 }
