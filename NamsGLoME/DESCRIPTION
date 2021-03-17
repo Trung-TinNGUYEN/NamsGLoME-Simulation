@@ -21,7 +21,11 @@ Imports:
     xLLiM,
     matrixcalc,
     ggplot2,
-    gridExtra
+    gridExtra,
+    plot3D,
+    fields,
+    grid,
+    gridBase
 Collate:
     utils.R
     logsumexp.R
