@@ -42,8 +42,7 @@
   Kmax <- 12 # This Kmax is recommended for the Ethanol real data set.
   
   # Number of trials to perform model selection.
-  # num_trials = 100
-  num_trials = 2
+  num_trials = 100
   
   ##############################################################################################################
   #                     Perform a specified task based on your seletion:

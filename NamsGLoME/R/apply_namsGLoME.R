@@ -91,7 +91,7 @@ import::from(grid, viewport, unit)
 
 import::from(pracma, Mode)
 
-print("Finish loading required package.")
+print("Load required packages.")
 
 ##########################################################################################################
 #                             Extract information from the input data.
