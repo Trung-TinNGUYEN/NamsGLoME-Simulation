@@ -22,9 +22,6 @@
   devtools::install("NamsGLoME")
   library(NamsGLoME)
   
-  # library(capushe)
-  # library(xLLiM)
-  
   ##############################################################################################################
   #                                         Load data sets
   ##############################################################################################################
@@ -42,10 +39,10 @@
   
   # Collection of model based on the maximum numer of components K of GLLiM.
   # K = 1,...,Kmax
-  Kmax <- 12 # This Kmax is recommended for Ethanol data sets.
+  Kmax <- 12 # This Kmax is recommended for the Ethanol real data set.
   
   # Number of trials to perform model selection.
-  #num_trials = 100
+  # num_trials = 100
   num_trials = 2
   
   ##############################################################################################################
@@ -54,6 +51,9 @@
   # "1". Consider NO as input variable and ER as response.
   # "2". Consider ER as input variable and NO as response.
   # "3". Stop the this experiment.
+  # WARNING: RUNNING TIME = 1 hour.
+  # Machine: Dell Lattitude 5490 (Intel(R) Core(TM) i5-8250U CPU @ 1.6GHz, 8GB RAM).
+  # Hyperparameters: We run two experiments with input_task = 1 and input_task 2 over 100 num_trials = 100, Kmax = 12.
   ##############################################################################################################
   input_task = 0 # Defaut task
   

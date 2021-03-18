@@ -1,7 +1,6 @@
 #' @export
 sample_GLoME_parabola = function(alpha, mu, R, beta0, beta, beta2, sigma, n, ny) {
-  # Output: Draws an n-sample from a mixture of gaussian-gated experts model
-  # with parabolic mean experts.
+  # Output: Draws an n-sample from a Gaussian-gated localized Mixture of Experts with parabolic mean experts.
     # X (nxp), y (nx1): sample data set (X_i,y_i)_{i=1,...n}
     # Xny(n*nyxp),yny(n*nyx1): repeat n_y times the sample X for Monte Carlo method
     #                         then combine by rows

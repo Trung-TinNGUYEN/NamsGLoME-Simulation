@@ -29,15 +29,8 @@ Imports:
     pracma
 Collate:
     utils.R
-    logsumexp.R
-    MAP.R
-    posterior_mvGMM.R
-    mvGMM_pdf.R
-    mvgaussian_pdf.R
-    sample_mvGMM.R
     sample_GLLiM.R
     sample_GLoME_parabola.R
-    loggausspdf.R
     gllim_inverse_dens.R
     model_true.R
     simulation.R

@@ -50,16 +50,17 @@ apply_namsGLoME = function(X, Y, num_trials = 1, Kmax = 12, plot_histogram = FAL
 # Provides a tool for non linear mapping (non linear regression)
 # using a mixture of regression model and an inverse regression strategy.
 #install.packages("xLLiM")
-import::from(xLLiM, gllim, emgm)
+#import::from(xLLiM, gllim, emgm)
 
-library(capushe)
-library(xLLiM)
+require(xLLiM)
 
 # CAlibrating Penalities Using Slope HEuristics (CAPUSHE):
 # The capushe function proposes two algorithms based on the slope heuristics
 # to calibrate penalties in the context of model selection via penalization.
 #install.packages("capushe")
-import::from(capushe, capushe, Djump, DDSE)
+#import::from(capushe, capushe, Djump, DDSE)
+
+require(capushe)
 
 # Create Elegant Data Visualisations Using the Grammar of Graphics:
 # A system for 'declaratively' creating graphics, based on "The Grammar of Graphics".
@@ -90,6 +91,8 @@ import::from(grid, viewport, unit)
 
 import::from(pracma, Mode)
 
+print("Finish loading required package.")
+
 ##########################################################################################################
 #                             Extract information from the input data.
 ##########################################################################################################
@@ -115,7 +118,7 @@ complexity <- contrast <- matrix(0, nrow = length(num_obs), ncol = Kmax)
 
 
 ##########################################################################################################
-#         Perform model selection and estimation the parameters of GLoME models over num_Trials
+#         Perform model selection and estimation the parameters of GLoME models over num_trials
 ##########################################################################################################
 
 # Save running time for this experiments
@@ -127,7 +130,7 @@ start_time <- Sys.time()
 # This leads to the parameters of forward regression.
 # Next, we make use of capushe package to calibrate penalties in the context of model
 # selection via penalization based on the slope heuristics.
-
+print("Perform model selection and estimation the parameters of GLoME models ... ")
 for (t in 1:num_trials) {
   for (n in 1:length(num_obs)){
     for (K in 1:Kmax) {
@@ -251,7 +254,7 @@ if ((plot_clustering_ethanol == TRUE) && ((D > 1) || (L > 1))){
 # Bases on NO
 #############
 if ((plot_clustering_ethanol == TRUE) && (D == 1) && (L == 1) && (input_task == 1)){
-  print("Plot the estimated results by NamsGLoME")
+  print("Plot the estimated results by NamsGLoME ... ")
 
   ethanol_GLoME <- data.frame(NOx_apply = t(X), E_apply = t(Y))
 

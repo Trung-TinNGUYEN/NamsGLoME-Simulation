@@ -1,6 +1,6 @@
 #' @export
 sample_GLLiM = function(alpha, mu, R, beta0, beta, sigma, n, ny) {
-  # Output: Draws an n-sample from a mixture of gaussian-gated experts model with linear mean experts (GLLiM).
+  # Output: Draws an n-sample from a supervised Gaussian locally-linear mapping (GLLiM).
     # X (nxp), y (nx1): sample data set (X_i,y_i)_{i=1,...n}
     # Xny(n*nyxp),yny(n*nyx1): repeat n_y times the sample X for Monte Carlo method
     #                         then combine by rows
