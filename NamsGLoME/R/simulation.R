@@ -1093,7 +1093,7 @@ if (plot_clustering_samples == TRUE){
 
   plot(0,type='n',axes=FALSE,ann=FALSE)
   plot(0,type='n',axes=FALSE,ann=FALSE)
-  forward_estimate_WS_2D <- image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
+  image.plot(data_x_estimate_WS_3D, data_y_estimate_WS_3D, forward_model_hat_WS_3D,
                                        xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
                                        main = "(c) 2D view of the resulting conditional density
                                             with the 2 regression components")
@@ -1274,7 +1274,7 @@ if (plot_clustering_samples == TRUE){
 
   plot(0,type='n',axes=FALSE,ann=FALSE)
   plot(0,type='n',axes=FALSE,ann=FALSE)
-  forward_estimate_MS_2D <- image.plot(data_x_estimate_MS_3D, data_y_estimate_MS_3D, forward_model_hat_MS_3D,
+  image.plot(data_x_estimate_MS_3D, data_y_estimate_MS_3D, forward_model_hat_MS_3D,
                                        xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
                                        main = "(c) 2D view of the resulting conditional density
                                             with the 2 regression components")

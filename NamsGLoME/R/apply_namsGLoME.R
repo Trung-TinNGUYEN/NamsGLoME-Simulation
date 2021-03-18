@@ -1,6 +1,6 @@
 #' @export
 apply_namsGLoME = function(X, Y, num_trials = 1, Kmax = 12, plot_histogram = FALSE, save_data = FALSE,
-                      plot_clustering_samples = FALSE, model_hat = 2, plot_slope_heuristic = FALSE){
+                          plot_clustering_ethanol = FALSE, plot_slope_heuristic = FALSE, input_task = 2){
 
   # %%%%%%%%%%%%%%%%% Non-asymptotic Model Selection in Mixture of Experts Models %%%%%%%%%%%%%%%%%%%%%%
   # %% Author: TrungTin Nguyen (14-03-2021) - tinnguyen0495@gmail.com
@@ -23,7 +23,8 @@ apply_namsGLoME = function(X, Y, num_trials = 1, Kmax = 12, plot_histogram = FAL
   # %    to local machine on Working directory.
   # % - plot_histogram == TRUE: Histogram of selected GLoME models using jump and slope criteria over num_trials.
   # % - plot_slope_heuristic = TRUE: Plot of the selected model dimension using the jump and slope criteria.
-  # % - plot_clustering_samples = TRUE: Perform clustering and regression tasks on input data sets.
+  # % - plot_clustering_ethanol = TRUE: Perform clustering and regression tasks on input data sets.
+  # % - input_task = 1: set up the name for xaxis and y axis.
 
   # %%%% Output %%%%
 
@@ -34,7 +35,7 @@ apply_namsGLoME = function(X, Y, num_trials = 1, Kmax = 12, plot_histogram = FAL
   # %   - complexity, contrast (num_obs x Kmax): Collection of model complexity values and
   # %     minimum contrast value for each model based on the numer of mixture components K of GLoME:
   # %     K = 1,...,Kmax.
-  # % - model_hat: after running num_trials on the input data sets,
+  # % - model_hat_Djump_mode (model_hat_DDSE_mode): after running num_trials on the input data sets,
   # %   the model with the highest frequency on the histogram of selected model is used.
   # % - running_time (s/mins/hours): total running time for the function NamsGLoME_simulation().
 
@@ -49,7 +50,10 @@ apply_namsGLoME = function(X, Y, num_trials = 1, Kmax = 12, plot_histogram = FAL
 # Provides a tool for non linear mapping (non linear regression)
 # using a mixture of regression model and an inverse regression strategy.
 #install.packages("xLLiM")
-import::from(xLLiM, gllim)
+import::from(xLLiM, gllim, emgm)
+
+library(capushe)
+library(xLLiM)
 
 # CAlibrating Penalities Using Slope HEuristics (CAPUSHE):
 # The capushe function proposes two algorithms based on the slope heuristics
@@ -181,7 +185,13 @@ model_hat_DDSE_index <- match(as.character(model_hat_DDSE_mode), model_Djump)
 
 if (plot_slope_heuristic == TRUE){
 
-  pdf("Plot_Slope_Heuristics.pdf",  width = 15, height = 10)
+  if (input_task == 1){
+    pdf("Plot_Slope_Heuristics_covariate_NO.pdf",  width = 15, height = 10)
+  }
+
+  if (input_task == 2){
+    pdf("Plot_Slope_Heuristics_covariate_ER.pdf",  width = 15, height = 10)
+  }
   op <- par(mfrow = c(2, 1))
   # Jump criterion:
   plot(Djump(as.data.frame(data_capushe[[model_hat_Djump_index]]$dataCapushe)), newwindow=FALSE)
@@ -197,13 +207,19 @@ if (plot_slope_heuristic == TRUE){
 
 if (plot_histogram == TRUE){
 
-  pdf("Histograms_Selected_K_100_Trials_Djump_DDSE_MS.pdf",  width = 8.27, height = 11.69)
+  if (input_task == 1){
+    pdf("Histograms_model_hat_covariate_NO.pdf",  width = 8.27, height = 11.69)
+  }
+  if (input_task == 2){
+    pdf("Histograms_model_hat_covariate_ER.pdf",  width = 8.27, height = 11.69)
+  }
+
   op <- par(mfrow = c(2, 1))
   hist(as.numeric(model_Djump[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
        ylab = "Empirical Probability", freq = 0,main = "(a) Selected model using jump criterion")
 
   hist(as.numeric(model_DDSE[,1]), breaks = c(1:Kmax), col = "blue", xlab = "Selected number of classes",
-       ylab = "Empirical Probability", freq = 0,main = "(e) Selected model using slope criterion")
+       ylab = "Empirical Probability", freq = 0,main = "(b) Selected model using slope criterion")
 
   op <- par(mfrow = c(1, 1))
   dev.off()
@@ -228,33 +244,37 @@ if (save_data == TRUE){
 # present the true and estimated mean functions. With our default simulated data sets, in WS case, we
 # select model with K = 2. For MS case, model with K = 4 is utilized to perform clustering and regression.
 ##########################################################################################################
-if ((plot_clustering_samples == TRUE)&&((D > 1)|| (L > 1))){
-  print("The current version does not support to plot the high-dimension data! We update it in the furture work!")
+if ((plot_clustering_ethanol == TRUE) && ((D > 1) || (L > 1))){
+  print("The current version does not support to plot high-dimension data sets! We resolve it in the furture work!")
 }
+#############
+# Bases on NO
+#############
+if ((plot_clustering_ethanol == TRUE) && (D == 1) && (L == 1) && (input_task == 1)){
+  print("Plot the estimated results by NamsGLoME")
 
-if ((plot_clustering_samples == TRUE)&&(D == 1) && (L == 1)){
-  #########
-  #WS case
-  #########
-  pdf("Clustering_2000_realization.pdf", width = 11.69, height = 8.27)
-  # ggplot first
-  ggplot(ethanol, aes(x= NOx , y= E)) +
-    geom_point(size = 3, colour = "blue", shape = 1) + labs(x = "NO", y = "Equivalence Ratio")
+  ethanol_GLoME <- data.frame(NOx_apply = t(X), E_apply = t(Y))
+
+  pdf("Clustering_Ethanol_Covariate_NO.pdf", width = 12, height = 15)
+
+  Ethanol_covariate_NO_raw <- ggplot(ethanol_GLoME, aes(x= NOx_apply , y= E_apply)) +
+    geom_point(size = 3, colour = "blue", shape = 1) + labs(x = "NO", y = "Equivalence Ratio")+
+    ggtitle("(a) Raw Ethanol data set based on NO.")
+
   ####
   # Figures of clustering deduced from the estimated conditional density by a MAP principle
   # Maximum a posteriori probability for the laten variable Z, p(Z_i=k|X_i,Y_i, \widehat{m})
   # Find the maximum position for each row of a matrix, breaking ties at random.
   ####
 
-  # Choose the best initializtion based on its likelihood values
-  # using emgm over n_init_emgm iteration.
+  # Choose the best initializtion based on its likelihood values using emgm over n_init_emgm iteration.
   n_init_emgm <- 100
   init_emgm_llh <- -Inf
   init_emgm <- list()
-  inital_df <- rbind(EquivRatio, NO)
+  inital_df <- rbind(X, Y)
 
   for (i in 1:n_init_emgm){
-    init_emgm_temp <- emgm(inital_df, init=selectedK_Djump_Ethanol_CNLL_mode)
+    init_emgm_temp <- emgm(inital_df, init=model_hat_Djump_mode)
 
     if (init_emgm_temp$llh > init_emgm_llh){
       init_emgm <- init_emgm_temp
@@ -271,22 +291,22 @@ if ((plot_clustering_samples == TRUE)&&(D == 1) && (L == 1)){
 
   estimate_class <- as.factor(max.col(inverse_model_hat$r))
   # Visualize the resulted clustering on WS data set.
-  estimate_class_df <- data.frame(X, Y, estimate_class, t(forward_model_GLoME$x_exp))
+  estimate_class_df <- data.frame(t(X), t(Y), estimate_class, t(forward_model_GLoME$x_exp))
   names(estimate_class_df) <- c('X', 'Y', 'Class','PostMeans')
 
   # Calculate the whole estimated mean function
 
   # Creating vector of colors for each class.
-  color_class_clustering <- rainbow(model_hat)
-  shape_class_clustering <- c(1:model_hat)
+  length_plot = 200
+  color_class_clustering <- rainbow(model_hat_Djump_mode)
+  shape_class_clustering <- c(1:model_hat_Djump_mode)
 
-  clustering_2000_realization <- ggplot() +
-    geom_point(data = estimate_class_df,
-               aes(x=  X, y= Y, shape=Class, color=Class)) +
-    scale_color_manual(values = color_class_clustering) + scale_shape_manual(values=shape_class_clustering)+
-    labs(x = " X" , y =  "Y")
+  Ethanol_covariate_NO_clustering <- ggplot() + labs(x = " X" , y =  "Y")+
+    geom_point(data = estimate_class_df, aes(x=  X, y= Y, shape=Class, color=Class)) +
+    scale_color_manual(values = color_class_clustering) + scale_shape_manual(values=shape_class_clustering)
 
-  for (k in 1:model_hat){
+
+  for (k in 1:model_hat_Djump_mode){
     gllim_As<-
       forward_model_GLoME$As[,,k]
 
@@ -299,7 +319,7 @@ if ((plot_clustering_samples == TRUE)&&(D == 1) && (L == 1)){
     data_k_y <- gllim_As*data_k_x + gllim_bs
 
     data_subClass <- data.frame(data_k_x = data_k_x, data_k_y = data_k_y)
-    clustering_2000_realization <- clustering_2000_realization +
+    Ethanol_covariate_NO_clustering <- Ethanol_covariate_NO_clustering +
       geom_line(data = data_subClass, aes(x= data_k_x , y= data_k_y), color = color_class_clustering[k])
   }
   # Calculate the whole estimated mean function
@@ -309,57 +329,246 @@ if ((plot_clustering_samples == TRUE)&&(D == 1) && (L == 1)){
                             to = max(estimate_class_df$Y), length.out = length_plot)
 
   data_y_estimate_gllim_dens <- gllim_inverse_dens(matrix(data_x_estimate,ncol = length_plot),
-                                                      inverse_model_hat,
-                                                      matrix(data_y_estimate, ncol = length_plot))
+                                                   inverse_model_hat, matrix(data_y_estimate, ncol = length_plot))
 
   data_y_estimate_estiMeans <- data_y_estimate_gllim_dens$x_exp
 
   data_y_estimate_estiMeans <- data.frame(data_x_estimate = data_x_estimate,
                                              data_y_estimate_estiMeans = t(data_y_estimate_estiMeans))
+    Ethanol_covariate_NO_clustering <- Ethanol_covariate_NO_clustering +
+      geom_line(data = data_y_estimate_estiMeans, aes(x= data_x_estimate , y= data_y_estimate_estiMeans), color = "black")+
+      theme(legend.position = "none") + ggtitle("(b) Clustering by GLoME based on NO.")
 
-  clustering_2000_realization <- clustering_2000_realization +
-    geom_line(data = data_y_estimate_estiMeans, aes(x= data_x_estimate , y= data_y_estimate_estiMeans), color = "black")+
-    theme(legend.position = "none") + ggtitle("(b) Clustering by GLoME in WS case.")
-
-  # ####
-  # # Plot the estimated posterior of mixture proportions.
-  # ####
-  #
-  # # Creating vector of colors for each class.
-  # color_class_posterior <- rainbow(model_hat)
-  # #color_class_posterior <- c("#00FFFFFF","#FF0000FF" )
-  # shape_class_posterior <- c(1:model_hat)
-  #
-  # clustering_2000_posterior <- ggplot()
-  # for (k in 1:model_hat){
-  #
-  #   data_Posterior <- estimate_class_df
-  #   data_k_x <- seq(from = min(data_Posterior$X), to = max(data_Posterior$X), length.out = length_plot)
-  #   data_k_y <- seq(from = min(data_Posterior$Y), to = max(data_Posterior$Y), length.out = length_plot)
-  #
-  #   # Calculate the estimated posterior for the mixing proportion for each mixture components
-  #   data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot),
-  #                                             forward_model_GLoME,  matrix(data_k_y, ncol = length_plot))
-  #   data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
-  #
-  #   data_estimPosterior <- data.frame(data_k_x = data_k_x, data_k_y_posterior = data_k_y_posterior)
-  #   clustering_2000_posterior <- clustering_2000_posterior +
-  #     geom_line(data = data_estimPosterior, aes(x= data_k_x , y= data_k_y_posterior),
-  #               color = color_class_posterior[k]) +
-  #     labs(x = "X", y = " Mixing probabilities")
-  # }
-  # clustering_2000_posterior <- clustering_2000_posterior +
-  #   theme(legend.position = "none") + ggtitle("(d) Gating network probabilities.")
-
+  # Display the resulting figures.
   # create an apporpriate viewport.  Modify the dimensions and coordinates as needed
-  vp.11 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
+  vp.11 <- viewport(height=unit(1/2, "npc"), width=unit(0.5, "npc"),  just=c("left","top"), y = 1, x = 0)
+
+  vp.12<- viewport(height=unit(1/2, "npc"), width=unit(0.5, "npc"),  just=c("left","top"), y = 1, x = 0.5)
+
+
+  # Plot your base graphics
+  par(mfrow=c(2,2))
+
+  length_plot_3D  <- 200
+
+  data_x_estimate_3D <- seq(from = min(X), to = max(X), length.out = length_plot_3D)
+  data_y_estimate_3D <- seq(from = min(Y), to = max(Y), length.out = length_plot_3D)
+
+  forward_model_GLoME_3D <- matrix(NA, nrow = length_plot_3D, ncol = length_plot_3D)
+  for (i in 1:length_plot_3D){
+    for (j in 1:length_plot_3D){
+      forward_model_GLoME_3D[i,j] <-
+        gllim_inverse_dens(matrix(data_x_estimate_3D[i]), inverse_model_hat, matrix(data_y_estimate_3D[j]))$CLL_vec
+    }
+  }
+
+  plot(0,type='n',axes=FALSE,ann=FALSE)
+  plot(0,type='n',axes=FALSE,ann=FALSE)
+  persp3D(data_x_estimate_3D, data_y_estimate_3D , forward_model_GLoME_3D, col = topo.colors(length_plot_3D^2),
+          xlab = "NO", ylab = "Equivalence Ratio", zlab = "Conditional density",
+          main = "(c) 3D view of the resulting conditional density based on NO.")
+  image.plot(data_x_estimate_3D, data_y_estimate_3D, forward_model_GLoME_3D,
+                                       xlab = "NO", ylab = "Equivalence Ratio",col = topo.colors(length_plot_3D^2),
+                                       main = "(d) 2D view of the same conditional density on NO.")
+  # Plot the ggplot using the print command
+  print(Ethanol_covariate_NO_raw, vp = vp.11)
+  print(Ethanol_covariate_NO_clustering, vp = vp.12)
+
+  par(mfrow=c(1,1))
+  dev.off()
+
+  ####
+  # Plot the estimated posterior of mixture proportions.
+  ####
+
+  pdf("Clustering_Posterior_Ethanol_Covariate_NO.pdf", width = 12, height = 15)
+
+  # Creating vector of colors for each class.
+  color_class_posterior <- rainbow(model_hat_Djump_mode)
+  #color_class_posterior <- c("#00FFFFFF","#FF0000FF" )
+  shape_class_posterior <- c(1:model_hat_Djump_mode)
+
+  Ethanol_covariate_NO_posteriors <- ggplot()
+  for (k in 1:model_hat_Djump_mode){
+
+    data_Posterior <- estimate_class_df
+    data_k_x <- seq(from = min(data_Posterior$X), to = max(data_Posterior$X), length.out = length_plot)
+    data_k_y <- seq(from = min(data_Posterior$Y), to = max(data_Posterior$Y), length.out = length_plot)
+
+    # Calculate the estimated posterior for the mixing proportion for each mixture components
+    data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot),
+                                              inverse_model_hat,  matrix(data_k_y, ncol = length_plot))
+    data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
+
+    data_estimPosterior <- data.frame(data_k_x = data_k_x, data_k_y_posterior = data_k_y_posterior)
+    Ethanol_covariate_NO_posteriors <- Ethanol_covariate_NO_posteriors +
+      geom_line(data = data_estimPosterior, aes(x= data_k_x , y= data_k_y_posterior),
+                color = color_class_posterior[k]) + labs(x = "NO", y = " Mixing probabilities")
+  }
+
+    Ethanol_covariate_NO_posteriors <- Ethanol_covariate_NO_posteriors +
+      theme(legend.position = "none") + ggtitle("(a) Gating network probabilities based on NO.")
+
+  # Plot the  estimated mean function E(NO|Equivalence Ratio, \widehat{\psi})
+  # The strength of the color of the regression lines corresponds to the mixture proportion.
+
+  # Creating vector of colors for each class.
+  color_class_strength <- rainbow(model_hat_Djump_mode)
+  shape_class_strength <- c(1:model_hat_Djump_mode)
+
+  Ethanol_covariate_NO_strength <- ggplot()
+  for (k in 1:model_hat_Djump_mode){
+    forward_model_GLoME_As<- forward_model_GLoME$As[,,k]
+
+    forward_model_GLoME_bs<- forward_model_GLoME$bs[,k]
+
+    forward_model_GLoME_posterior<- forward_model_GLoME$alpha[,k]
+
+
+    data_k <- estimate_class_df[which(estimate_class==k),]
+    data_k_x <- seq(from = min(data_k$X), to = max(data_k$X), length.out = length_plot)
+    data_k_y <- seq(from = min(data_k$Y), to = max(data_k$Y), length.out = length_plot)
+
+    # Calculate the estimated posterior for the mixing proportion for each mixture components
+    data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot), inverse_model_hat,
+                                              matrix(data_k_y, ncol = length_plot))
+    data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
+
+
+    # Calculate the estimated mean for each mixture components
+    data_k_y <- forward_model_GLoME_As*data_k_x + forward_model_GLoME_bs
+
+    data_subClass <- data.frame(data_k_x = data_k_x, data_k_y = data_k_y, data_k_y_posterior = data_k_y_posterior)
+    Ethanol_covariate_NO_strength <- Ethanol_covariate_NO_strength +
+      geom_line(data = data_subClass, aes(x= data_k_x , y= data_k_y, size = data_k_y_posterior),
+                color = color_class_strength[k]) + labs(colour = "Class", size = "Proportion")
+  }
+
+  # Calculate the whole estimated mean function
+  data_x <- seq(from = min(estimate_class_df$X),
+                to = max(estimate_class_df$X), length.out = length_plot)
+  data_y <- seq(from = min(estimate_class_df$Y),
+                to = max(estimate_class_df$Y), length.out = length_plot)
+
+  data_y_gllim_dens <- gllim_inverse_dens(matrix(data_x,ncol = length_plot), inverse_model_hat,
+                                          matrix(data_y, ncol = length_plot))
+
+  data_y_estiMeans <- data_y_gllim_dens$x_exp
+
+  data_y_estiMeans <- data.frame(data_x = data_x, data_y_estiMeans = t(data_y_estiMeans))
+      Ethanol_covariate_NO_strength <- Ethanol_covariate_NO_strength +
+        geom_point(data = estimate_class_df, aes(x= X , y= Y, shape=Class, color=Class),size = 3) +
+      scale_color_manual(values = color_class_strength) + scale_shape_manual(values=shape_class_strength)+
+      labs(x = " NO", y = "Equivalence Ratio")
+
+    Ethanol_covariate_NO_strength <- Ethanol_covariate_NO_strength +
+      geom_line(data = data_y_estiMeans, aes(x= data_x , y= data_y_estiMeans)) + theme(legend.position = "none")+
+      ggtitle("(b) Clustering based with strength based on NO.")
+
+  grid.arrange(Ethanol_covariate_NO_posteriors, Ethanol_covariate_NO_strength, nrow = 2)
+  dev.off()
+
+}
+#############
+# Bases on ER
+#############
+if ((plot_clustering_ethanol == TRUE) && (D == 1) && (L == 1) && (input_task == 2)){
+  print("Plot the estimated results by NamsGLoME")
+
+  ethanol_GLoME <- data.frame(NOx_apply = t(X), E_apply = t(Y))
+
+  pdf("Clustering_Ethanol_Covariate_ER.pdf", width = 12, height = 15)
+
+  Ethanol_covariate_NO_raw <- ggplot(ethanol_GLoME, aes(x= NOx_apply , y= E_apply)) +
+    geom_point(size = 3, colour = "blue", shape = 1) + labs(x = "Equivalence Ratio", y = "NO")+
+    ggtitle("(a) Raw Ethanol data set based on ER.")
+
+  ####
+  # Figures of clustering deduced from the estimated conditional density by a MAP principle
+  # Maximum a posteriori probability for the laten variable Z, p(Z_i=k|X_i,Y_i, \widehat{m})
+  # Find the maximum position for each row of a matrix, breaking ties at random.
+  ####
+
+  # Choose the best initializtion based on its likelihood values using emgm over n_init_emgm iteration.
+  n_init_emgm <- 100
+  init_emgm_llh <- -Inf
+  init_emgm <- list()
+  inital_df <- rbind(X, Y)
+
+  for (i in 1:n_init_emgm){
+    init_emgm_temp <- emgm(inital_df, init=model_hat_Djump_mode)
+
+    if (init_emgm_temp$llh > init_emgm_llh){
+      init_emgm <- init_emgm_temp
+      init_emgm_llh <- init_emgm_temp$llh
+    }
+  }
+
+  # Estimate the inverese parameters \widehat{s}_{\widehat{m}} using GLLiM.
+  inverse_model_hat <- gllim(Y, X, in_K = model_hat_Djump_mode, in_r = init_emgm, maxiter = 1000)
+
+  # Estimate the parameters \widehat{s}^*_{\widehat{m}} using inverse regression trick.
+  forward_model_GLoME <- gllim_inverse_dens(X, inverse_model_hat, Y)
+
+
+  estimate_class <- as.factor(max.col(inverse_model_hat$r))
+  # Visualize the resulted clustering on WS data set.
+  estimate_class_df <- data.frame(t(X), t(Y), estimate_class, t(forward_model_GLoME$x_exp))
+  names(estimate_class_df) <- c('X', 'Y', 'Class','PostMeans')
+
+  # Calculate the whole estimated mean function
+
+  # Creating vector of colors for each class.
+  length_plot = 200
+  color_class_clustering <- rainbow(model_hat_Djump_mode)
+  shape_class_clustering <- c(1:model_hat_Djump_mode)
+
+  Ethanol_covariate_NO_clustering <- ggplot() + labs(x = " X" , y =  "Y")+
+    geom_point(data = estimate_class_df, aes(x=  X, y= Y, shape=Class, color=Class)) +
+    scale_color_manual(values = color_class_clustering) + scale_shape_manual(values=shape_class_clustering)
+
+
+  for (k in 1:model_hat_Djump_mode){
+    gllim_As<- forward_model_GLoME$As[,,k]
+
+    gllim_bs<- forward_model_GLoME$bs[,k]
+
+    data_k <- estimate_class_df[which(estimate_class==k),]
+
+    data_k_x <- seq(from = min(data_k$X), to = max(data_k$X), length.out = length_plot)
+    data_k_y <- gllim_As*data_k_x + gllim_bs
+
+    data_subClass <- data.frame(data_k_x = data_k_x, data_k_y = data_k_y)
+    Ethanol_covariate_NO_clustering <- Ethanol_covariate_NO_clustering +
+      geom_line(data = data_subClass, aes(x= data_k_x , y= data_k_y), color = color_class_clustering[k])
+  }
+  # Calculate the whole estimated mean function
+  data_x_estimate <- seq(from = min(estimate_class_df$X),
+                         to = max(estimate_class_df$X), length.out = length_plot)
+  data_y_estimate <- seq(from = min(estimate_class_df$Y),
+                         to = max(estimate_class_df$Y), length.out = length_plot)
+
+  data_y_estimate_gllim_dens <- gllim_inverse_dens(matrix(data_x_estimate,ncol = length_plot),
+                                                   inverse_model_hat,
+                                                   matrix(data_y_estimate, ncol = length_plot))
+
+  data_y_estimate_estiMeans <- data_y_estimate_gllim_dens$x_exp
+
+  data_y_estimate_estiMeans <- data.frame(data_x_estimate = data_x_estimate,
+                                          data_y_estimate_estiMeans = t(data_y_estimate_estiMeans))
+    Ethanol_covariate_NO_clustering <- Ethanol_covariate_NO_clustering +
+      geom_line(data = data_y_estimate_estiMeans, aes(x= data_x_estimate , y= data_y_estimate_estiMeans), color = "black")+
+      theme(legend.position = "none") + ggtitle("(b) Clustering by GLoME based on ER.")
+
+
+  # Display the resulting figures.
+  # create an apporpriate viewport.  Modify the dimensions and coordinates as needed
+  vp.11 <- viewport(height=unit(1/2, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
                     y = 1, x = 0)
 
-  vp.12<- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
+  vp.12<- viewport(height=unit(1/2, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
                    y = 1, x = 0.5)
 
-  vp.22 <- viewport(height=unit(.5, "npc"), width=unit(0.5, "npc"),  just=c("left","top"),
-                    y = 0.5, x = 0.5)
 
   # Plot your base graphics
   par(mfrow=c(2,2))
@@ -380,17 +589,107 @@ if ((plot_clustering_samples == TRUE)&&(D == 1) && (L == 1)){
 
   plot(0,type='n',axes=FALSE,ann=FALSE)
   plot(0,type='n',axes=FALSE,ann=FALSE)
-  forward_estimate_2D <- image.plot(data_x_estimate_3D, data_y_estimate_3D, forward_model_GLoME_3D,
-                                       xlab = "X", ylab = "Y",col = topo.colors(length_plot_3D^2),
-                                       main = "(c) 2D view of the resulting conditional density
-                                            with the 2 regression components")
+  persp3D(data_x_estimate_3D, data_y_estimate_3D , forward_model_GLoME_3D, col = topo.colors(length_plot_3D^2),
+          xlab = "Equivalence Ratio", ylab = "NO", zlab = "Conditional density",
+          main = "(c) 3D view of the resulting conditional density based on ER.")
+  image.plot(data_x_estimate_3D, data_y_estimate_3D, forward_model_GLoME_3D,
+             xlab = "Equivalence Ratio", ylab = "NO",col = topo.colors(length_plot_3D^2),
+             main = "(d) 2D view of the same conditional density on ER.")
   # Plot the ggplot using the print command
-  print(forward_model_true_2000_realization, vp = vp.11)
-  #print(clustering_2000_realization, vp = vp.12)
-  #print(clustering_2000_posterior, vp = vp.22)
+  print(Ethanol_covariate_NO_raw, vp = vp.11)
+  print(Ethanol_covariate_NO_clustering, vp = vp.12)
 
+  par(mfrow=c(1,1))
   dev.off()
 
+  ####
+  # Plot the estimated posterior of mixture proportions.
+  ####
+
+  pdf("Clustering_Posterior_Ethanol_Covariate_ER.pdf", width = 12, height = 15)
+
+  # Creating vector of colors for each class.
+  color_class_posterior <- rainbow(model_hat_Djump_mode)
+  #color_class_posterior <- c("#00FFFFFF","#FF0000FF" )
+  shape_class_posterior <- c(1:model_hat_Djump_mode)
+
+  Ethanol_covariate_NO_posteriors <- ggplot()
+  for (k in 1:model_hat_Djump_mode){
+
+    data_Posterior <- estimate_class_df
+    data_k_x <- seq(from = min(data_Posterior$X), to = max(data_Posterior$X), length.out = length_plot)
+    data_k_y <- seq(from = min(data_Posterior$Y), to = max(data_Posterior$Y), length.out = length_plot)
+
+    # Calculate the estimated posterior for the mixing proportion for each mixture components
+    data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot),
+                                              inverse_model_hat,  matrix(data_k_y, ncol = length_plot))
+    data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
+
+    data_estimPosterior <- data.frame(data_k_x = data_k_x, data_k_y_posterior = data_k_y_posterior)
+    Ethanol_covariate_NO_posteriors <- Ethanol_covariate_NO_posteriors +
+      geom_line(data = data_estimPosterior, aes(x= data_k_x , y= data_k_y_posterior),
+                color = color_class_posterior[k]) + labs(x = "ER", y = " Mixing probabilities")
+  }
+
+  Ethanol_covariate_NO_posteriors <- Ethanol_covariate_NO_posteriors +
+    theme(legend.position = "none") + ggtitle("(a) Gating network probabilities based on ER.")
+
+  # Plot the  estimated mean function E(NO|Equivalence Ratio, \widehat{\psi})
+  # The strength of the color of the regression lines corresponds to the mixture proportion.
+
+  # Creating vector of colors for each class.
+  color_class_strength <- rainbow(model_hat_Djump_mode)
+  shape_class_strength <- c(1:model_hat_Djump_mode)
+
+  Ethanol_covariate_NO_strength <- ggplot()
+  for (k in 1:model_hat_Djump_mode){
+    forward_model_GLoME_As <- forward_model_GLoME$As[,,k]
+
+    forward_model_GLoME_bs<- forward_model_GLoME$bs[,k]
+
+    forward_model_GLoME_posterior<- forward_model_GLoME$alpha[,k]
+
+
+    data_k <- estimate_class_df[which(estimate_class==k),]
+    data_k_x <- seq(from = min(data_k$X), to = max(data_k$X), length.out = length_plot)
+    data_k_y <- seq(from = min(data_k$Y), to = max(data_k$Y), length.out = length_plot)
+
+    # Calculate the estimated posterior for the mixing proportion for each mixture components
+    data_k_y_gllim_dens <- gllim_inverse_dens(matrix(data_k_x,ncol = length_plot), inverse_model_hat,
+                                              matrix(data_k_y, ncol = length_plot))
+    data_k_y_posterior <- data_k_y_gllim_dens$alpha[,k]
+
+
+    # Calculate the estimated mean for each mixture components
+    data_k_y <- forward_model_GLoME_As*data_k_x + forward_model_GLoME_bs
+
+    data_subClass <- data.frame(data_k_x = data_k_x, data_k_y = data_k_y, data_k_y_posterior = data_k_y_posterior)
+    Ethanol_covariate_NO_strength <- Ethanol_covariate_NO_strength +
+      geom_line(data = data_subClass, aes(x= data_k_x , y= data_k_y, size = data_k_y_posterior),
+                color = color_class_strength[k]) + labs(colour = "Class", size = "Proportion")
+  }
+
+  # Calculate the whole estimated mean function
+  data_x <- seq(from = min(estimate_class_df$X), to = max(estimate_class_df$X), length.out = length_plot)
+  data_y <- seq(from = min(estimate_class_df$Y), to = max(estimate_class_df$Y), length.out = length_plot)
+
+  data_y_gllim_dens <- gllim_inverse_dens(matrix(data_x,ncol = length_plot), inverse_model_hat,
+                                          matrix(data_y, ncol = length_plot))
+
+  data_y_estiMeans <- data_y_gllim_dens$x_exp
+
+  data_y_estiMeans <- data.frame(data_x = data_x, data_y_estiMeans = t(data_y_estiMeans))
+  Ethanol_covariate_NO_strength <- Ethanol_covariate_NO_strength +
+    geom_point(data = estimate_class_df, aes(x= X , y= Y, shape=Class, color=Class),size = 3) +
+    scale_color_manual(values = color_class_strength) + scale_shape_manual(values=shape_class_strength)+
+    labs(x = "Equivalence Ratio", y = "NO")
+
+  Ethanol_covariate_NO_strength <- Ethanol_covariate_NO_strength +
+    geom_line(data = data_y_estiMeans, aes(x= data_x , y= data_y_estiMeans)) + theme(legend.position = "none")+
+    ggtitle("(b) Clustering based with strength based on ER.")
+
+  grid.arrange(Ethanol_covariate_NO_posteriors, Ethanol_covariate_NO_strength, nrow = 2)
+  dev.off()
 
 }
 
@@ -401,8 +700,9 @@ running_time <- end_time - start_time
 # Output list
 ###########################################################################################################
 
-output <- list(running_time = running_time, model_Djump = model_Djump, model_DDSE = model_DDSE,
-                 data_capushe = data_capushe, complexity = complexity, contrast = contrast)
+output <- list(model_hat_Djump_mode = model_hat_Djump_mode, model_hat_DDSE_mode = model_hat_DDSE_mode,
+               running_time = running_time, model_Djump = model_Djump, contrast = contrast,
+               model_DDSE = model_DDSE, data_capushe = data_capushe, complexity = complexity)
 
 return(output)
 
