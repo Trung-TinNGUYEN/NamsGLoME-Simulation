@@ -25,7 +25,8 @@ Imports:
     plot3D,
     fields,
     grid,
-    gridBase
+    gridBase,
+    pracma
 Collate:
     utils.R
     logsumexp.R
@@ -40,6 +41,7 @@ Collate:
     gllim_inverse_dens.R
     model_true.R
     simulation.R
+    apply_namsGLoME.R
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

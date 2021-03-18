@@ -266,7 +266,7 @@ start_time <- Sys.time()
           # WS case:
           # Using n data points for estimators.
           # Estimate the inverese parameters \widehat{s}_{\widehat{m}} using GLLiM.
-          estimate_GLoME_WS <- gllim(t(as.matrix(sample_data_WS$y[1:num_obs[n]])),
+            estimate_GLoME_WS <- gllim(t(as.matrix(sample_data_WS$y[1:num_obs[n]])),
                                      t(as.matrix(sample_data_WS$X[1:num_obs[n]])), in_K = K)
 
           # Estimate the parameters \widehat{s}^*_{\widehat{m}} using inverse regression trick.

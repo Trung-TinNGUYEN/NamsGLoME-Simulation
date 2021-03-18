@@ -12,11 +12,7 @@
 # 3. Error decay of tensorized (J)KL divergence between the true and selected
 #   densities based on the jump criterion, represented in a log-log scale, using 30 trials.
 #   A free least-square regression with standard error and a regression with slope −1 were
-#   added to stress the two different behavior for each graph.
-#
-# A personal access token (This personal access token is used for install package NamsGLoME) with 
-# repo:invite scope was recently added to your account (17 March, 2021).
-# 4669acbc1009b7bd4d491d3b43a21f0c9343d6d1
+#   added to stress the two different behavior for each graph.  
 
 ##############################################################################################################
 
