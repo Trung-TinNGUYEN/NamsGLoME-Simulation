@@ -5,7 +5,7 @@ Description of the codes:
 
     SimulationStudy.R : Run simulations and draw results on simulated data sets.
     
-    RealDatasets.R : Run simulations and draw results on the Ethanol data set.
+    RealDatasets.R : Use the NamsGLoME package and draw results on the Ethanol data set.
     
     Results: Expected results when running completely the SimulationStudy.R and RealDatasets.R.
     
@@ -40,6 +40,6 @@ Description of the codes:
                             3. Finally, we utilize capushe package to calibrate penalties in the context of
                             model selection via penalization based on the slope heuristics.
                             
-        utils.R : Some complementary functions needed for packaged NamsGLoME.
+        utils.R : Some complementary functions needed for the packaged NamsGLoME.
     
     
