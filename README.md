@@ -9,7 +9,7 @@ Description of the codes:
     
     Results: Expected results when running completely the SimulationStudy.R and RealDatasets.R.
     
-    NamsGLoME: package used for the SimulationStudy.R and RealDatasets.R, comprising the following functions
+    NamsGLoME: package used for the SimulationStudy.R and RealDatasets.R, comprising the following functions:
     
         sample_GLLiM.R : Draws an n-sample from a supervised Gaussian locally-linear mapping (GLLiM).
     
