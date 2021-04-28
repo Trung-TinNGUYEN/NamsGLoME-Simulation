@@ -1,8 +1,8 @@
 # NamsGLoME-Simulation
-This repository contains all numerical experiments (R code) for "A non-asymptotic penalization criterionfor model selection in mixture ofexperts models (Nams-GLoME)".
+This repository contains all numerical experiments (R code) for "A non-asymptotic penalization criterion for model selection in mixture ofexperts models (Nams-GLoME)".
 
 # Article
-[axXiv: ](https://arxiv.org/abs/2104.02640) A non-asymptotic penalization criterionfor model selection in mixture ofexperts models 
+[axXiv: ](https://arxiv.org/abs/2104.02640) A non-asymptotic penalization criterion for model selection in mixture ofexperts models 
 
 ## Description of the codes:
 
