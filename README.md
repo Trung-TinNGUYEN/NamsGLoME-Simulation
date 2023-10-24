@@ -1,5 +1,5 @@
 # NamsGLoME-Simulation
-This repository contains all numerical experiments (R code) for "A non-asymptotic approach for model selection via penalization in high-dimensional mixture of experts models", which will appear in the Electronic Journal of Statistics.
+This repository contains all numerical experiments (R code) for "A non-asymptotic approach for model selection via penalization in high-dimensional mixture of experts models". Electronic Journal of Statistics, 2022.
 
 # Article
 [arXiv: ](https://arxiv.org/abs/2104.02640) A non-asymptotic approach for model selection via penalization in high-dimensional mixture of experts models. Electronic Journal of Statistics, 2022.
